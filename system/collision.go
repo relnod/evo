@@ -61,6 +61,7 @@ func (s *Collision) Update() {
 	s.ResetCells()
 
 	s.CreatureCreature()
+	s.CreatureEyeCreature()
 	s.CreatureBorder()
 
 }
@@ -92,23 +93,27 @@ func (s *Collision) CreatureCreature() {
 	}
 }
 
-// func (s *Collision) CreatureEyeFood() {
-// 	for _, c := range s.cells {
-// 		for _, creature := range c.creatures {
-// 			for _, food := range c.food {
-// 				d := num.Vec2{X: food.Pos.X - creature.Pos.X, Y: food.Pos.Y - creature.Pos.Y}
-// 				if d.Len() > 50 {
-// 					continue
-// 				}
-// 				x := creature.Dir.X / d.X
-// 				y := creature.Dir.Y / d.Y
-// 				if x < 0.001 && y < 0.001 {
-// 					s.cbCreatureEyeFood(creature, food)
-// 				}
-// 			}
-// 		}
-// 	}
-// }
+func (s *Collision) CreatureEyeCreature() {
+	for _, c := range s.cells {
+		for _, creature1 := range c.creatures {
+			if creature1.Eye == nil {
+				continue
+			}
+
+			for _, creature2 := range c.creatures {
+				d := num.Vec2{X: creature2.Pos.X - creature1.Pos.X, Y: creature2.Pos.Y - creature1.Pos.Y}
+				if d.Len() > 50 {
+					continue
+				}
+				x := creature1.Eye.Dir.X / d.X
+				y := creature1.Eye.Dir.Y / d.Y
+				if x < creature1.Eye.FOV/360.0 && y < creature1.Eye.FOV/360.0 {
+					creature1.Eye.Sees(creature2)
+				}
+			}
+		}
+	}
+}
 
 func (s *Collision) CreatureBorder() {
 	for _, c := range s.system.creatures {

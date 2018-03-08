@@ -21,6 +21,7 @@ type Creature struct {
 	Speed  float32
 	Dir    num.Vec2
 
+	Eye   *Eye
 	Brain *deep.Neural
 
 	Generation        int
@@ -28,7 +29,6 @@ type Creature struct {
 
 	Alive      bool
 	Saturation float32
-	SawFood    bool
 	LastBread  float32
 	Age        float32
 	State      State
@@ -46,7 +46,6 @@ func NewCreature(pos num.Vec2) *Creature {
 	})
 
 	return newCreature(pos, r, brain, 0)
-
 }
 
 func (e *Creature) GetChild() *Creature {
@@ -65,15 +64,21 @@ func (e *Creature) GetChild() *Creature {
 	}
 
 	r := e.Radius
-	// r *= 1.0 + rand.Float32()/10.0
+	// r *= 1.0 + (rand.Float32()-0.5)/10.0
 
 	return newCreature(e.Pos, r, deep.FromDump(dump), e.Generation+1)
 }
 
 func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
 	var speed float32 = 0.0
+	var eye *Eye
 	if radius > 4.0 {
 		speed = 5 / radius
+		eye = &Eye{
+			Dir:   num.Vec2{},
+			Range: 20.0,
+			FOV:   5.0,
+		}
 	}
 
 	return &Creature{
@@ -82,6 +87,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		Dir:    randomDir(),
 		Speed:  speed,
 
+		Eye:   eye,
 		Brain: brain,
 
 		Generation:        generation,
@@ -89,7 +95,6 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 
 		Alive:      true,
 		Saturation: 5.0,
-		SawFood:    false,
 		LastBread:  -40,
 		Age:        0,
 		State:      StateChild,
@@ -129,11 +134,12 @@ func (e *Creature) Update() {
 		}
 
 		if e.Speed > 0 {
-			in1 := 0.1
-			in2 := 0.9
-			if e.SawFood {
+			in1 := 0.0
+			in2 := 0.0
+			if e.Eye.Saw > 0 {
 				in1 = 0.9
-				in2 = 0.1
+				in2 = float64(e.Eye.Saw) / 10.0
+				e.Eye.Reset()
 			}
 			out := e.Brain.Predict([]float64{in1, in2})
 			if out[0] < 0.5 {
@@ -154,12 +160,10 @@ func (e *Creature) Update() {
 	}
 
 	e.Age += 0.01
-
-	e.SawFood = false
 }
 
 func (e *Creature) Collide(e2 *Creature) {
-	if e.Radius > e2.Radius {
+	if e.Radius/e2.Radius > 1.1 {
 		e.Saturation += e2.Radius
 		e2.Die()
 	}
