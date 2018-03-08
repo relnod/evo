@@ -37,19 +37,21 @@ type Creature struct {
 func NewCreature(pos num.Vec2) *Creature {
 	r := rand.Float32()*10 + 2.0
 
-	brain := deep.NewNeural(&deep.Config{
+	return newCreature(pos, r, newBrain(), 0)
+}
+
+func newBrain() *deep.Neural {
+	return deep.NewNeural(&deep.Config{
 		Inputs:     2,
 		Layout:     []int{2, 2, 2},
 		Activation: deep.ActivationSigmoid,
 		Bias:       true,
 		Weight:     deep.NewNormal(1.0, 0.0),
 	})
-
-	return newCreature(pos, r, brain, 0)
 }
 
-func (e *Creature) GetChild() *Creature {
-	dump := e.Brain.Dump()
+func newMutateBrain(brain *deep.Neural) *deep.Neural {
+	dump := brain.Dump()
 	for i := range dump.Weights {
 		for j := range dump.Weights[i] {
 			for k := range dump.Weights[i][j] {
@@ -63,10 +65,13 @@ func (e *Creature) GetChild() *Creature {
 		}
 	}
 
-	r := e.Radius
-	r *= 1.0 + (rand.Float32()-0.5)/5.0
+	return deep.FromDump(dump)
+}
 
-	return newCreature(e.Pos, r, deep.FromDump(dump), e.Generation+1)
+func (e *Creature) GetChild() *Creature {
+	r := e.Radius * (1.0 + (rand.Float32()-0.5)/5.0)
+
+	return newCreature(e.Pos, r, newMutateBrain(e.Brain), e.Generation+1)
 }
 
 func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
@@ -81,6 +86,9 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 			FOV:   5.0,
 		}
 		energyConsumption *= -1.0
+		if brain == nil {
+			brain = newBrain()
+		}
 	}
 
 	return &Creature{
@@ -135,7 +143,7 @@ func (e *Creature) Update() {
 			e.State = StateBreading
 		}
 
-		if e.Brain != nil && e.Eye != nil {
+		if e.Speed > 0 {
 			e.updateFromBrain()
 		}
 
@@ -165,6 +173,8 @@ func (e *Creature) updateFromBrain() {
 		}
 		e.Dir.Norm()
 	}
+
+	e.Eye.Dir = e.Dir
 }
 
 func (e *Creature) Collide(e2 *Creature) {
