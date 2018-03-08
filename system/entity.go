@@ -35,7 +35,7 @@ func (s *Entity) Update() {
 			s.system.creatures = append(s.system.creatures[:i], s.system.creatures[i+1:]...)
 		}
 
-		if c.Saturation > 10 && (c.Age-c.LastBread) > 40 {
+		if c.Saturation > 20 && (c.Age-c.LastBread) > 40 {
 			log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.system.creatures))
 			c.LastBread = c.Age
 

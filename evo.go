@@ -22,6 +22,7 @@ func main() {
 }
 
 type App struct {
+	ticksPerSecond  int
 	system          *system.System
 	renderSystem    *system.Render
 	collisionSystem *system.Collision
@@ -57,6 +58,7 @@ func NewApp() *App {
 
 	s := system.NewSystem(width, height, 100, 200)
 	app := &App{
+		ticksPerSecond:  60,
 		system:          s,
 		renderSystem:    system.NewRender(s, canvas),
 		collisionSystem: system.NewCollision(s, 36),
@@ -94,13 +96,23 @@ func NewApp() *App {
 	app.renderSystem.Init()
 	app.entitySystem.Init()
 
+	js.Global.Call("addEventListener", "keyup", func(event *js.Object) {
+		keycode := event.Get("keyCode").Int()
+		if keycode == 38 { // UP
+			app.ticksPerSecond += 5
+		}
+		if keycode == 40 { // DOWN
+			app.ticksPerSecond -= 5
+		}
+	}, false)
+
 	return app
 }
 
 func (app *App) Run() {
 	for {
 		app.update()
-		time.Sleep(time.Second / 60)
+		time.Sleep(time.Second / time.Duration(app.ticksPerSecond))
 
 		// time.Sleep(time.Second)
 	}
