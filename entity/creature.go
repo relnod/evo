@@ -43,7 +43,7 @@ func NewCreature(pos num.Vec2) *Creature {
 func newBrain() *deep.Neural {
 	return deep.NewNeural(&deep.Config{
 		Inputs:     2,
-		Layout:     []int{2, 2, 2},
+		Layout:     []int{2, 3, 3},
 		Activation: deep.ActivationSigmoid,
 		Bias:       true,
 		Weight:     deep.NewNormal(1.0, 0.0),
@@ -167,9 +167,9 @@ func (e *Creature) updateFromBrain() {
 	out := e.Brain.Predict([]float64{in1, in2})
 	if out[0] < 0.5 {
 		if out[1] < 0.5 {
-			e.Dir.Rotate(0.02)
+			e.Dir.Rotate(out[2] / 20)
 		} else {
-			e.Dir.Rotate(-0.02)
+			e.Dir.Rotate(out[2] / 20)
 		}
 		e.Dir.Norm()
 	}
