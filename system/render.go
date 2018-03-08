@@ -61,16 +61,12 @@ func NewRender(s *System, canvas *js.Object) *Render {
 func (r *Render) Update() {
 	r.Clear()
 
-	r.SetColor(0.0, 0.3, 0.0, 1.0)
 	for _, c := range r.system.creatures {
+		r.SetColor(c.Radius/10.0, 0.3, 0.0, 1.0)
 		r.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
 	}
-
-	r.SetColor(1.0, 0.3, 0.0, 1.0)
-	for _, f := range r.system.food {
-		r.DrawCircle(f.Pos.X, f.Pos.Y, f.Radius)
-	}
 }
+
 func (r *Render) Init() {
 	attrs := webgl.DefaultAttributes()
 	attrs.Alpha = false

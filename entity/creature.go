@@ -21,16 +21,24 @@ type Creature struct {
 	SawFood           bool
 	LastBread         float32
 
-	Generation int
-	Age        float32
+	Generation   int
+	Age          float32
+	WantsToBreed bool
+	Child        bool
 }
 
 func NewCreature(pos num.Vec2) *Creature {
+	r := rand.Float32()*10 + 2.0
+	var speed float32 = 0.0
+	if r > 4.0 {
+		speed = 5 / r
+	}
+
 	return &Creature{
 		Pos:               pos,
-		Radius:            8.0,
+		Radius:            r,
 		Dir:               randomDir(),
-		Speed:             1.5,
+		Speed:             speed,
 		Alive:             true,
 		Saturation:        5.0,
 		EnergyConsumption: rand.Float32() / 50,
@@ -41,10 +49,12 @@ func NewCreature(pos num.Vec2) *Creature {
 			Bias:       true,
 			Weight:     deep.NewNormal(1.0, 0.0),
 		}),
-		SawFood:    false,
-		LastBread:  -30,
-		Generation: 0,
-		Age:        0,
+		SawFood:      false,
+		LastBread:    -40,
+		Generation:   0,
+		Age:          0,
+		WantsToBreed: false,
+		Child:        true,
 	}
 }
 
@@ -63,19 +73,28 @@ func (e *Creature) GetChild() *Creature {
 		}
 	}
 
+	r := e.Radius
+	// r *= 1.0 + rand.Float32()/10.0
+	var speed float32 = 0.0
+	if r > 4.0 {
+		speed = 5 / r
+	}
+
 	return &Creature{
 		Pos:               e.Pos,
-		Radius:            e.Radius,
+		Radius:            r,
 		Dir:               randomDir(),
-		Speed:             e.Speed,
+		Speed:             speed,
 		Alive:             true,
 		Saturation:        5.0,
 		EnergyConsumption: rand.Float32() / 50,
 		Brain:             deep.FromDump(dump),
 		SawFood:           false,
-		LastBread:         -30,
+		LastBread:         -40,
 		Generation:        e.Generation + 1,
 		Age:               0,
+		WantsToBreed:      false,
+		Child:             true,
 	}
 }
 
@@ -98,29 +117,52 @@ func (e *Creature) Update() {
 		return
 	}
 
-	in1 := 0.1
-	in2 := 0.9
-	if e.SawFood {
-		in1 = 0.9
-		in2 = 0.1
-	}
-	out := e.Brain.Predict([]float64{in1, in2})
-	if out[0] < 0.5 {
-		if out[1] < 0.5 {
-			e.Dir.Rotate(0.02)
-		} else {
-			e.Dir.Rotate(-0.02)
+	if e.Child {
+		e.Pos.X += e.Dir.X
+		e.Pos.Y += e.Dir.Y
+		if e.Age > 0.5 {
+			e.Child = false
 		}
-		e.Dir.Norm()
+	} else {
+		if e.Saturation > e.Radius*10 && (e.Age-e.LastBread) > 40 {
+			e.WantsToBreed = true
+		}
+
+		if e.Speed > 0 {
+			in1 := 0.1
+			in2 := 0.9
+			if e.SawFood {
+				in1 = 0.9
+				in2 = 0.1
+			}
+			out := e.Brain.Predict([]float64{in1, in2})
+			if out[0] < 0.5 {
+				if out[1] < 0.5 {
+					e.Dir.Rotate(0.02)
+				} else {
+					e.Dir.Rotate(-0.02)
+				}
+				e.Dir.Norm()
+			}
+
+			e.Pos.X += e.Dir.X * e.Speed
+			e.Pos.Y += e.Dir.Y * e.Speed
+			e.Saturation -= e.EnergyConsumption
+		} else {
+			e.Saturation += e.EnergyConsumption
+		}
 	}
 
-	e.Pos.X += e.Dir.X * e.Speed
-	e.Pos.Y += e.Dir.Y * e.Speed
-
-	e.Saturation -= e.EnergyConsumption
 	e.Age += 0.01
 
 	e.SawFood = false
+}
+
+func (e *Creature) Collide(e2 *Creature) {
+	if e.Radius > e2.Radius {
+		e.Saturation += e2.Radius
+		e2.Die()
+	}
 }
 
 func (e *Creature) IsAlive() bool {

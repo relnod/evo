@@ -7,15 +7,13 @@ type System struct {
 	Height float32
 
 	creatures []*entity.Creature
-	food      []*entity.Food
 }
 
-func NewSystem(width, height float32, numCreatures, numFood int) *System {
+func NewSystem(width, height float32, numEntities int) *System {
 	s := &System{
 		Width:     width,
 		Height:    height,
-		creatures: make([]*entity.Creature, numCreatures),
-		food:      make([]*entity.Food, numFood),
+		creatures: make([]*entity.Creature, numEntities),
 	}
 
 	return s

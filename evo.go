@@ -56,29 +56,14 @@ func NewApp() *App {
 	body.Get("style").Set("margin", 0)
 	body.Call("appendChild", canvas)
 
-	s := system.NewSystem(width, height, 100, 200)
+	s := system.NewSystem(width, height, 100)
 	app := &App{
-		ticksPerSecond:  60,
+		ticksPerSecond:  160,
 		system:          s,
 		renderSystem:    system.NewRender(s, canvas),
 		collisionSystem: system.NewCollision(s, 36),
 		entitySystem:    system.NewEntity(s),
 	}
-
-	app.collisionSystem.SetCreatureCreatureCB(func(e1 *entity.Creature, e2 *entity.Creature) {
-		// e1.Die()
-		// e2.Die()
-	})
-
-	app.collisionSystem.SetCreatureEyeFoodCB(func(e *entity.Creature, f *entity.Food) {
-		// fmt.Println("sawfood = true")
-		e.SawFood = true
-	})
-
-	app.collisionSystem.SetCreatureFoodCB(func(e *entity.Creature, f *entity.Food) {
-		e.Saturation += 1.0
-		app.entitySystem.ResetFood(f)
-	})
 
 	app.collisionSystem.SetCreatureBorderCB(func(e *entity.Creature, border int) {
 		switch border {

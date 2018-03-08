@@ -11,10 +11,7 @@ import (
 type Collision struct {
 	system *System
 
-	cbCreatureCreature func(*entity.Creature, *entity.Creature)
-	cbCreatureEyeFood  func(*entity.Creature, *entity.Food)
-	cbCreatureFood     func(*entity.Creature, *entity.Food)
-	cbCreatureBorder   func(*entity.Creature, int)
+	cbCreatureBorder func(*entity.Creature, int)
 
 	cells []*cell
 }
@@ -27,7 +24,6 @@ type cell struct {
 	radius float32
 
 	creatures []*entity.Creature
-	food      []*entity.Food
 }
 
 func NewCollision(s *System, numCells int) *Collision {
@@ -65,8 +61,6 @@ func (s *Collision) Update() {
 	s.ResetCells()
 
 	s.CreatureCreature()
-	s.CreatureEyeFood()
-	s.CreatureFood()
 	s.CreatureBorder()
 
 }
@@ -74,19 +68,12 @@ func (s *Collision) Update() {
 func (s *Collision) ResetCells() {
 	for _, cell := range s.cells {
 		cell.creatures = cell.creatures[:0]
-		cell.food = cell.food[:0]
 	}
 
 	for _, c := range s.cells {
 		for _, creature := range s.system.creatures {
 			if collision.CircleCircle(&c.center, c.radius, &creature.Pos, creature.Radius) {
 				c.creatures = append(c.creatures, creature)
-			}
-		}
-
-		for _, food := range s.system.food {
-			if collision.CircleCircle(&c.center, c.radius, &food.Pos, food.Radius) {
-				c.food = append(c.food, food)
 			}
 		}
 	}
@@ -97,42 +84,31 @@ func (s *Collision) CreatureCreature() {
 		for i := 0; i < len(c.creatures); i++ {
 			for j := i + 1; j < len(c.creatures); j++ {
 				if collision.CircleCircle(&c.creatures[i].Pos, c.creatures[i].Radius, &c.creatures[j].Pos, c.creatures[j].Radius) {
-					s.cbCreatureCreature(c.creatures[i], c.creatures[j])
+					c.creatures[i].Collide(c.creatures[j])
+					c.creatures[j].Collide(c.creatures[i])
 				}
 			}
 		}
 	}
 }
 
-func (s *Collision) CreatureEyeFood() {
-	for _, c := range s.cells {
-		for _, creature := range c.creatures {
-			for _, food := range c.food {
-				d := num.Vec2{X: food.Pos.X - creature.Pos.X, Y: food.Pos.Y - creature.Pos.Y}
-				if d.Len() > 50 {
-					continue
-				}
-				x := creature.Dir.X / d.X
-				y := creature.Dir.Y / d.Y
-				if x < 0.001 && y < 0.001 {
-					s.cbCreatureEyeFood(creature, food)
-				}
-			}
-		}
-	}
-}
-
-func (s *Collision) CreatureFood() {
-	for _, c := range s.cells {
-		for _, creature := range c.creatures {
-			for _, food := range c.food {
-				if collision.CircleCircle(&creature.Pos, creature.Radius, &food.Pos, food.Radius) {
-					s.cbCreatureFood(creature, food)
-				}
-			}
-		}
-	}
-}
+// func (s *Collision) CreatureEyeFood() {
+// 	for _, c := range s.cells {
+// 		for _, creature := range c.creatures {
+// 			for _, food := range c.food {
+// 				d := num.Vec2{X: food.Pos.X - creature.Pos.X, Y: food.Pos.Y - creature.Pos.Y}
+// 				if d.Len() > 50 {
+// 					continue
+// 				}
+// 				x := creature.Dir.X / d.X
+// 				y := creature.Dir.Y / d.Y
+// 				if x < 0.001 && y < 0.001 {
+// 					s.cbCreatureEyeFood(creature, food)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
 func (s *Collision) CreatureBorder() {
 	for _, c := range s.system.creatures {
@@ -146,18 +122,6 @@ func (s *Collision) CreatureBorder() {
 			s.cbCreatureBorder(c, collision.BOT)
 		}
 	}
-}
-
-func (s *Collision) SetCreatureCreatureCB(cb func(*entity.Creature, *entity.Creature)) {
-	s.cbCreatureCreature = cb
-}
-
-func (s *Collision) SetCreatureEyeFoodCB(cb func(*entity.Creature, *entity.Food)) {
-	s.cbCreatureEyeFood = cb
-}
-
-func (s *Collision) SetCreatureFoodCB(cb func(*entity.Creature, *entity.Food)) {
-	s.cbCreatureFood = cb
 }
 
 func (s *Collision) SetCreatureBorderCB(cb func(*entity.Creature, int)) {
