@@ -7,6 +7,14 @@ import (
 	"github.com/relnod/evo/num"
 )
 
+type State int
+
+const (
+	StateChild State = iota
+	StateAdult
+	StateBreading
+)
+
 type Creature struct {
 	Pos    num.Vec2
 	Radius float32
@@ -18,13 +26,12 @@ type Creature struct {
 	Generation        int
 	EnergyConsumption float32
 
-	Alive        bool
-	Saturation   float32
-	SawFood      bool
-	LastBread    float32
-	Age          float32
-	WantsToBreed bool
-	Child        bool
+	Alive      bool
+	Saturation float32
+	SawFood    bool
+	LastBread  float32
+	Age        float32
+	State      State
 }
 
 func NewCreature(pos num.Vec2) *Creature {
@@ -80,13 +87,12 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		Generation:        generation,
 		EnergyConsumption: rand.Float32() / 50,
 
-		Alive:        true,
-		Saturation:   5.0,
-		SawFood:      false,
-		LastBread:    -40,
-		Age:          0,
-		WantsToBreed: false,
-		Child:        true,
+		Alive:      true,
+		Saturation: 5.0,
+		SawFood:    false,
+		LastBread:  -40,
+		Age:        0,
+		State:      StateChild,
 	}
 }
 
@@ -109,15 +115,17 @@ func (e *Creature) Update() {
 		return
 	}
 
-	if e.Child {
+	switch e.State {
+	case StateChild:
 		e.Pos.X += e.Dir.X
 		e.Pos.Y += e.Dir.Y
+
 		if e.Age > 0.5 {
-			e.Child = false
+			e.State = StateAdult
 		}
-	} else {
+	case StateAdult:
 		if e.Saturation > e.Radius*10 && (e.Age-e.LastBread) > 40 {
-			e.WantsToBreed = true
+			e.State = StateBreading
 		}
 
 		if e.Speed > 0 {

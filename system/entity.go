@@ -30,8 +30,8 @@ func (s *Entity) Update() {
 			s.system.creatures = append(s.system.creatures[:i], s.system.creatures[i+1:]...)
 		}
 
-		if c.WantsToBreed {
-			c.WantsToBreed = false
+		if c.State == entity.StateBreading {
+			c.State = entity.StateAdult
 			// log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.system.creatures))
 			c.LastBread = c.Age
 
