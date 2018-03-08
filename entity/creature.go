@@ -64,7 +64,7 @@ func (e *Creature) GetChild() *Creature {
 	}
 
 	r := e.Radius
-	// r *= 1.0 + (rand.Float32()-0.5)/10.0
+	r *= 1.0 + (rand.Float32()-0.5)/5.0
 
 	return newCreature(e.Pos, r, deep.FromDump(dump), e.Generation+1)
 }
@@ -72,6 +72,7 @@ func (e *Creature) GetChild() *Creature {
 func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
 	var speed float32 = 0.0
 	var eye *Eye
+	energyConsumption := rand.Float32() / 60
 	if radius > 4.0 {
 		speed = 5 / radius
 		eye = &Eye{
@@ -79,6 +80,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 			Range: 20.0,
 			FOV:   5.0,
 		}
+		energyConsumption *= -1.0
 	}
 
 	return &Creature{
@@ -91,7 +93,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		Brain: brain,
 
 		Generation:        generation,
-		EnergyConsumption: rand.Float32() / 50,
+		EnergyConsumption: energyConsumption,
 
 		Alive:      true,
 		Saturation: 5.0,
@@ -133,33 +135,36 @@ func (e *Creature) Update() {
 			e.State = StateBreading
 		}
 
-		if e.Speed > 0 {
-			in1 := 0.0
-			in2 := 0.0
-			if e.Eye.Saw > 0 {
-				in1 = 0.9
-				in2 = float64(e.Eye.Saw) / 10.0
-				e.Eye.Reset()
-			}
-			out := e.Brain.Predict([]float64{in1, in2})
-			if out[0] < 0.5 {
-				if out[1] < 0.5 {
-					e.Dir.Rotate(0.02)
-				} else {
-					e.Dir.Rotate(-0.02)
-				}
-				e.Dir.Norm()
-			}
-
-			e.Pos.X += e.Dir.X * e.Speed
-			e.Pos.Y += e.Dir.Y * e.Speed
-			e.Saturation -= e.EnergyConsumption
-		} else {
-			e.Saturation += e.EnergyConsumption
+		if e.Brain != nil && e.Eye != nil {
+			e.updateFromBrain()
 		}
+
+		e.Pos.X += e.Dir.X * e.Speed
+		e.Pos.Y += e.Dir.Y * e.Speed
+
+		e.Saturation += e.EnergyConsumption
 	}
 
 	e.Age += 0.01
+}
+
+func (e *Creature) updateFromBrain() {
+	in1 := 0.0
+	in2 := 0.0
+	if e.Eye.Saw > 0 {
+		in1 = 0.9
+		in2 = float64(e.Eye.Saw) / 10.0
+		e.Eye.Reset()
+	}
+	out := e.Brain.Predict([]float64{in1, in2})
+	if out[0] < 0.5 {
+		if out[1] < 0.5 {
+			e.Dir.Rotate(0.02)
+		} else {
+			e.Dir.Rotate(-0.02)
+		}
+		e.Dir.Norm()
+	}
 }
 
 func (e *Creature) Collide(e2 *Creature) {

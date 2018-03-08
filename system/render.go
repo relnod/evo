@@ -62,7 +62,7 @@ func (r *Render) Update() {
 	r.Clear()
 
 	for _, c := range r.system.creatures {
-		r.SetColor(c.Radius/10.0, 0.3, 0.0, 1.0)
+		r.SetColor(1.0/c.Radius, 0.2, 1.0/c.Radius, 1.0)
 		r.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
 	}
 }
