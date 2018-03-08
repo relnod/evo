@@ -13,15 +13,15 @@ type Creature struct {
 	Speed  float32
 	Dir    num.Vec2
 
-	Brain      *deep.Neural
-	Alive      bool
-	Saturation float32
+	Brain *deep.Neural
 
+	Generation        int
 	EnergyConsumption float32
-	SawFood           bool
-	LastBread         float32
 
-	Generation   int
+	Alive        bool
+	Saturation   float32
+	SawFood      bool
+	LastBread    float32
 	Age          float32
 	WantsToBreed bool
 	Child        bool
@@ -29,33 +29,17 @@ type Creature struct {
 
 func NewCreature(pos num.Vec2) *Creature {
 	r := rand.Float32()*10 + 2.0
-	var speed float32 = 0.0
-	if r > 4.0 {
-		speed = 5 / r
-	}
 
-	return &Creature{
-		Pos:               pos,
-		Radius:            r,
-		Dir:               randomDir(),
-		Speed:             speed,
-		Alive:             true,
-		Saturation:        5.0,
-		EnergyConsumption: rand.Float32() / 50,
-		Brain: deep.NewNeural(&deep.Config{
-			Inputs:     2,
-			Layout:     []int{2, 2, 2},
-			Activation: deep.ActivationSigmoid,
-			Bias:       true,
-			Weight:     deep.NewNormal(1.0, 0.0),
-		}),
-		SawFood:      false,
-		LastBread:    -40,
-		Generation:   0,
-		Age:          0,
-		WantsToBreed: false,
-		Child:        true,
-	}
+	brain := deep.NewNeural(&deep.Config{
+		Inputs:     2,
+		Layout:     []int{2, 2, 2},
+		Activation: deep.ActivationSigmoid,
+		Bias:       true,
+		Weight:     deep.NewNormal(1.0, 0.0),
+	})
+
+	return newCreature(pos, r, brain, 0)
+
 }
 
 func (e *Creature) GetChild() *Creature {
@@ -75,26 +59,34 @@ func (e *Creature) GetChild() *Creature {
 
 	r := e.Radius
 	// r *= 1.0 + rand.Float32()/10.0
+
+	return newCreature(e.Pos, r, deep.FromDump(dump), e.Generation+1)
+}
+
+func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
 	var speed float32 = 0.0
-	if r > 4.0 {
-		speed = 5 / r
+	if radius > 4.0 {
+		speed = 5 / radius
 	}
 
 	return &Creature{
-		Pos:               e.Pos,
-		Radius:            r,
-		Dir:               randomDir(),
-		Speed:             speed,
-		Alive:             true,
-		Saturation:        5.0,
+		Pos:    pos,
+		Radius: radius,
+		Dir:    randomDir(),
+		Speed:  speed,
+
+		Brain: brain,
+
+		Generation:        generation,
 		EnergyConsumption: rand.Float32() / 50,
-		Brain:             deep.FromDump(dump),
-		SawFood:           false,
-		LastBread:         -40,
-		Generation:        e.Generation + 1,
-		Age:               0,
-		WantsToBreed:      false,
-		Child:             true,
+
+		Alive:        true,
+		Saturation:   5.0,
+		SawFood:      false,
+		LastBread:    -40,
+		Age:          0,
+		WantsToBreed: false,
+		Child:        true,
 	}
 }
 
