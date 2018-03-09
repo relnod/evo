@@ -62,7 +62,11 @@ func (r *Render) Update() {
 	r.Clear()
 
 	for _, c := range r.system.creatures {
-		r.SetColor(1.0/c.Radius, 0.2, 1.0/c.Radius, 1.0)
+		if c.Speed == 0 {
+			r.SetColor(0.0, 1.0-4.0/c.Radius/3.0, 0.0, 0.0)
+		} else {
+			r.SetColor(1/(c.Radius-4.0), 0.0, 0.0, 1.0)
+		}
 		r.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
 	}
 }
@@ -77,7 +81,7 @@ func (r *Render) Init() {
 	}
 
 	gl.Viewport(0, 0, int(r.system.Width), int(r.system.Height))
-	gl.ClearColor(1.0, 1.0, 1.0, 1)
+	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
 	vs := gl.CreateShader(gl.VERTEX_SHADER)

@@ -4,6 +4,7 @@ import (
 	"math/rand"
 
 	deep "github.com/patrikeh/go-deep"
+	"github.com/relnod/evo/config"
 	"github.com/relnod/evo/num"
 )
 
@@ -35,9 +36,64 @@ type Creature struct {
 }
 
 func NewCreature(pos num.Vec2) *Creature {
-	r := rand.Float32()*10 + 2.0
+	r := rand.Float32()*rand.Float32()*rand.Float32()*10 + 2.0
+	r = 3.0
 
 	return newCreature(pos, r, newBrain(), 0)
+}
+
+func (e *Creature) GetChild() *Creature {
+	r := e.Radius * (1.0 + (rand.Float32()-0.5)/5.0)
+	if r < 2.0 {
+		r = 2.0
+	} else if r > 10.0 {
+		r = 10.0
+	}
+
+	return newCreature(e.Pos, r, e.Brain, e.Generation+1)
+}
+
+func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
+	var speed float32 = 0.0
+	var eye *Eye
+	energyConsumption := rand.Float32() / 60
+	if radius > 4.0 {
+		speed = 5 / radius
+		eye = &Eye{
+			Dir:   num.Vec2{},
+			Range: 20.0,
+			FOV:   5.0,
+		}
+		energyConsumption *= -1.0
+		if brain == nil {
+			brain = newBrain()
+		}
+	} else {
+		brain = nil
+	}
+
+	if brain != nil {
+		brain = newMutateBrain(brain)
+	}
+
+	return &Creature{
+		Pos:    pos,
+		Radius: radius,
+		Dir:    randomDir(),
+		Speed:  speed,
+
+		Eye:   eye,
+		Brain: brain,
+
+		Generation:        generation,
+		EnergyConsumption: energyConsumption,
+
+		Alive:      true,
+		Saturation: 5.0,
+		LastBread:  -30,
+		Age:        0,
+		State:      StateChild,
+	}
 }
 
 func newBrain() *deep.Neural {
@@ -68,49 +124,6 @@ func newMutateBrain(brain *deep.Neural) *deep.Neural {
 	return deep.FromDump(dump)
 }
 
-func (e *Creature) GetChild() *Creature {
-	r := e.Radius * (1.0 + (rand.Float32()-0.5)/5.0)
-
-	return newCreature(e.Pos, r, newMutateBrain(e.Brain), e.Generation+1)
-}
-
-func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
-	var speed float32 = 0.0
-	var eye *Eye
-	energyConsumption := rand.Float32() / 60
-	if radius > 4.0 {
-		speed = 5 / radius
-		eye = &Eye{
-			Dir:   num.Vec2{},
-			Range: 20.0,
-			FOV:   5.0,
-		}
-		energyConsumption *= -1.0
-		if brain == nil {
-			brain = newBrain()
-		}
-	}
-
-	return &Creature{
-		Pos:    pos,
-		Radius: radius,
-		Dir:    randomDir(),
-		Speed:  speed,
-
-		Eye:   eye,
-		Brain: brain,
-
-		Generation:        generation,
-		EnergyConsumption: energyConsumption,
-
-		Alive:      true,
-		Saturation: 5.0,
-		LastBread:  -40,
-		Age:        0,
-		State:      StateChild,
-	}
-}
-
 func randomDir() num.Vec2 {
 	d := num.Vec2{
 		X: float32(rand.Float32()*2 - 1),
@@ -132,8 +145,8 @@ func (e *Creature) Update() {
 
 	switch e.State {
 	case StateChild:
-		e.Pos.X += e.Dir.X
-		e.Pos.Y += e.Dir.Y
+		e.Pos.X += e.Dir.X * config.WorldSpeed
+		e.Pos.Y += e.Dir.Y * config.WorldSpeed
 
 		if e.Age > 0.5 {
 			e.State = StateAdult
@@ -147,13 +160,14 @@ func (e *Creature) Update() {
 			e.updateFromBrain()
 		}
 
-		e.Pos.X += e.Dir.X * e.Speed
-		e.Pos.Y += e.Dir.Y * e.Speed
+		e.Pos.X += e.Dir.X * e.Speed * config.WorldSpeed
+		e.Pos.Y += e.Dir.Y * e.Speed * config.WorldSpeed
 
-		e.Saturation += e.EnergyConsumption
+		e.Saturation += e.EnergyConsumption * config.WorldSpeed
 	}
 
-	e.Age += 0.01
+	e.Age += 0.01 * config.WorldSpeed
+	// fmt.Println(e.Age)
 }
 
 func (e *Creature) updateFromBrain() {
@@ -169,7 +183,7 @@ func (e *Creature) updateFromBrain() {
 		if out[1] < 0.5 {
 			e.Dir.Rotate(out[2] / 20)
 		} else {
-			e.Dir.Rotate(out[2] / 20)
+			e.Dir.Rotate(-out[2] / 20)
 		}
 		e.Dir.Norm()
 	}
@@ -178,7 +192,10 @@ func (e *Creature) updateFromBrain() {
 }
 
 func (e *Creature) Collide(e2 *Creature) {
-	if e.Radius/e2.Radius > 1.1 {
+	if e.Brain != nil && e2.Brain == nil {
+		e.Saturation += e2.Radius
+		e2.Die()
+	} else if e.Radius/e2.Radius > 1.1 {
 		e.Saturation += e2.Radius
 		e2.Die()
 	}

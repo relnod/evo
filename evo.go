@@ -8,6 +8,7 @@ import (
 
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/relnod/evo/collision"
+	"github.com/relnod/evo/config"
 	"github.com/relnod/evo/entity"
 	"github.com/relnod/evo/system"
 )
@@ -56,9 +57,9 @@ func NewApp() *App {
 	body.Get("style").Set("margin", 0)
 	body.Call("appendChild", canvas)
 
-	s := system.NewSystem(width, height, 100)
+	s := system.NewSystem(width, height, 1)
 	app := &App{
-		ticksPerSecond:  160,
+		ticksPerSecond:  60,
 		system:          s,
 		renderSystem:    system.NewRender(s, canvas),
 		collisionSystem: system.NewCollision(s, 36),
@@ -84,10 +85,10 @@ func NewApp() *App {
 	js.Global.Call("addEventListener", "keyup", func(event *js.Object) {
 		keycode := event.Get("keyCode").Int()
 		if keycode == 38 { // UP
-			app.ticksPerSecond += 5
+			config.WorldSpeed += 5
 		}
 		if keycode == 40 { // DOWN
-			app.ticksPerSecond -= 5
+			config.WorldSpeed -= 5
 		}
 	}, false)
 
