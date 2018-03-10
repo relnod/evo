@@ -57,13 +57,13 @@ func NewApp() *App {
 	body.Get("style").Set("margin", 0)
 	body.Call("appendChild", canvas)
 
-	s := system.NewSystem(width, height, 1)
+	s := system.NewSystem(width, height, 1000)
 	app := &App{
 		ticksPerSecond:  60,
 		system:          s,
 		renderSystem:    system.NewRender(s, canvas),
 		collisionSystem: system.NewCollision(s, 36),
-		entitySystem:    system.NewEntity(s),
+		entitySystem:    system.NewEntity(s, system.ModeRandom),
 	}
 
 	app.collisionSystem.SetCreatureBorderCB(func(e *entity.Creature, border int) {

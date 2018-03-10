@@ -8,17 +8,31 @@ import (
 	"github.com/relnod/evo/num"
 )
 
+const (
+	ModeRandom = iota
+	ModeFixed
+)
+
+type Mode int
+
 type Entity struct {
 	system *System
+	mode   Mode
 }
 
-func NewEntity(system *System) *Entity {
-	return &Entity{system: system}
+func NewEntity(system *System, mode Mode) *Entity {
+	return &Entity{system: system, mode: mode}
 }
 
 func (s *Entity) Init() {
 	for i := range s.system.creatures {
-		s.system.creatures[i] = s.NewCreature()
+
+		var radius float32 = 3.0
+		if s.mode == ModeRandom {
+			radius = rand.Float32()*rand.Float32()*rand.Float32()*10 + 2.0
+		}
+
+		s.system.creatures[i] = entity.NewCreature(s.randomPosition(radius), radius)
 	}
 }
 
@@ -32,22 +46,18 @@ func (s *Entity) Update() {
 
 		if c.State == entity.StateBreading {
 			c.State = entity.StateAdult
-			// log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.system.creatures))
 			c.LastBread = c.Age
-
-			child1 := c.GetChild()
-			s.system.creatures = append(s.system.creatures, child1)
-
-			child2 := c.GetChild()
-			s.system.creatures = append(s.system.creatures, child2)
+			// log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.system.creatures))
+			c.Energy -= c.Radius
+			for i := 0; i < rand.Intn(2)+1; i++ {
+				child := c.GetChild()
+				if c.Energy-child.Energy > 0 {
+					c.Energy -= child.Energy
+					s.system.creatures = append(s.system.creatures, child)
+				}
+			}
 		}
 	}
-}
-
-func (s *Entity) NewCreature() *entity.Creature {
-	c := entity.NewCreature(s.randomPosition(8.0))
-
-	return c
 }
 
 func (s *Entity) randomPosition(radius float32) num.Vec2 {
