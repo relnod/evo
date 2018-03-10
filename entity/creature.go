@@ -46,7 +46,7 @@ func NewCreature(pos num.Vec2, radius float32) *Creature {
 }
 
 func (e *Creature) GetChild() *Creature {
-	r := e.Radius * (1.0 + (rand.Float32()-0.5)/5.0)
+	r := mutate(e.Radius, 0.2)
 	if r < 2.0 {
 		r = 2.0
 	} else if r > 10.0 {
@@ -98,8 +98,8 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		consts: Constants{
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
-			EnergyBreed:       radius * radius * radius * (1.0 + (rand.Float32()-0.5)/5.0),
-			LifeExpectancy:    100 * (1.0 + (rand.Float32()-0.5)/5.0),
+			EnergyBreed:       mutate(radius*radius*radius, 0.2),
+			LifeExpectancy:    mutate(100, 0.2),
 		},
 	}
 }
@@ -120,16 +120,22 @@ func newMutateBrain(brain *deep.Neural) *deep.Neural {
 		for j := range dump.Weights[i] {
 			for k := range dump.Weights[i][j] {
 				r := rand.Float32()
-				if r < 0.05 {
-					dump.Weights[i][j][k] += 0.1
-				} else if r < 0.1 {
-					dump.Weights[i][j][k] -= 0.1
+				if r < 2 {
+					dump.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.2)
 				}
 			}
 		}
 	}
 
 	return deep.FromDump(dump)
+}
+
+func mutate(val float32, fac float32) float32 {
+	return val * (1.0 + (rand.Float32()-0.5)*fac)
+}
+
+func mutate64(val float64, fac float64) float64 {
+	return val * (1.0 + (rand.Float64()-0.5)*fac)
 }
 
 func randomDir() num.Vec2 {
