@@ -57,6 +57,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 	var speed float32 = 0.0
 	var eye *Eye
 	energyConsumption := rand.Float32() / 60
+	saturation := radius
 	if radius > 4.0 {
 		speed = 5 / radius
 		eye = &Eye{
@@ -89,7 +90,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		EnergyConsumption: energyConsumption,
 
 		Alive:      true,
-		Saturation: 5.0,
+		Saturation: saturation,
 		LastBread:  -30,
 		Age:        0,
 		State:      StateChild,
@@ -154,6 +155,7 @@ func (e *Creature) Update() {
 	case StateAdult:
 		if e.Saturation > e.Radius*10 && (e.Age-e.LastBread) > 40 {
 			e.State = StateBreading
+			e.Saturation -= e.Radius
 		}
 
 		if e.Speed > 0 {
