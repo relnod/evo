@@ -32,10 +32,7 @@ func NewCollision(s *System, numCells int) *Collision {
 	cellWidth := s.Width / float32(numCells/cellsPerRow)
 	cellHeight := s.Height / float32(numCells/cellsPerRow)
 
-	radius := cellWidth
-	if cellWidth < cellHeight {
-		radius = cellHeight
-	}
+	radius := (&num.Vec2{X: cellWidth, Y: cellHeight}).Len()
 
 	cells := make([]*cell, numCells, numCells)
 	for row := 0; row < cellsPerRow; row++ {
@@ -83,7 +80,7 @@ func (s *Collision) ResetCells() {
 func (s *Collision) CreatureCreature() {
 	for _, c := range s.cells {
 		for i := 0; i < len(c.creatures); i++ {
-			for j := i + 1; j < len(c.creatures); j++ {
+			for j := 0; j < len(c.creatures); j++ {
 				if collision.CircleCircle(&c.creatures[i].Pos, c.creatures[i].Radius, &c.creatures[j].Pos, c.creatures[j].Radius) {
 					c.creatures[i].Collide(c.creatures[j])
 					c.creatures[j].Collide(c.creatures[i])
@@ -105,11 +102,12 @@ func (s *Collision) CreatureEyeCreature() {
 				if d.Len() > 50 {
 					continue
 				}
-				x := creature1.Eye.Dir.X / d.X
-				y := creature1.Eye.Dir.Y / d.Y
-				if x < creature1.Eye.FOV/360.0 && y < creature1.Eye.FOV/360.0 {
-					creature1.Eye.Sees(creature2)
+
+				if num.Angle(&d, &creature1.Dir) > creature1.Eye.FOV {
+					continue
 				}
+
+				creature1.Eye.Sees(creature2)
 			}
 		}
 	}
