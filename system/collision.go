@@ -23,7 +23,8 @@ type cell struct {
 	center num.Vec2
 	radius float32
 
-	creatures []*entity.Creature
+	static []*entity.Creature
+	moving []*entity.Creature
 }
 
 func NewCollision(s *System, numCells int) *Collision {
@@ -65,13 +66,18 @@ func (s *Collision) Update() {
 
 func (s *Collision) ResetCells() {
 	for _, cell := range s.cells {
-		cell.creatures = cell.creatures[:0]
+		cell.static = cell.static[:0]
+		cell.moving = cell.moving[:0]
 	}
 
 	for _, c := range s.cells {
 		for _, creature := range s.system.creatures {
 			if collision.CircleCircle(&c.center, c.radius, &creature.Pos, creature.Radius) {
-				c.creatures = append(c.creatures, creature)
+				if creature.Speed == 0 && creature.State != entity.StateChild {
+					c.static = append(c.static, creature)
+				} else {
+					c.moving = append(c.moving, creature)
+				}
 			}
 		}
 	}
@@ -79,11 +85,15 @@ func (s *Collision) ResetCells() {
 
 func (s *Collision) CreatureCreature() {
 	for _, c := range s.cells {
-		for i := 0; i < len(c.creatures); i++ {
-			for j := 0; j < len(c.creatures); j++ {
-				if collision.CircleCircle(&c.creatures[i].Pos, c.creatures[i].Radius, &c.creatures[j].Pos, c.creatures[j].Radius) {
-					c.creatures[i].Collide(c.creatures[j])
-					c.creatures[j].Collide(c.creatures[i])
+		for _, creature := range c.moving {
+			for _, moving := range c.moving {
+				if collision.CircleCircle(&creature.Pos, creature.Radius, &moving.Pos, moving.Radius) {
+					creature.Collide(moving)
+				}
+			}
+			for _, static := range c.static {
+				if collision.CircleCircle(&creature.Pos, creature.Radius, &static.Pos, static.Radius) {
+					creature.Collide(static)
 				}
 			}
 		}
@@ -92,37 +102,52 @@ func (s *Collision) CreatureCreature() {
 
 func (s *Collision) CreatureEyeCreature() {
 	for _, c := range s.cells {
-		for _, creature1 := range c.creatures {
-			if creature1.Eye == nil {
+		for _, creature := range c.moving {
+			if creature.Eye == nil {
 				continue
 			}
 
-			for _, creature2 := range c.creatures {
-				d := num.Vec2{X: creature2.Pos.X - creature1.Pos.X, Y: creature2.Pos.Y - creature1.Pos.Y}
+			for _, moving := range c.moving {
+				d := num.Vec2{X: moving.Pos.X - creature.Pos.X, Y: moving.Pos.Y - creature.Pos.Y}
 				if d.Len() > 50 {
 					continue
 				}
 
-				if num.Angle(&d, &creature1.Dir) > creature1.Eye.FOV {
+				if num.Angle(&d, &creature.Dir) > creature.Eye.FOV {
 					continue
 				}
 
-				creature1.Eye.Sees(creature2)
+				creature.Eye.Sees(moving)
+			}
+
+			for _, static := range c.static {
+				d := num.Vec2{X: static.Pos.X - creature.Pos.X, Y: static.Pos.Y - creature.Pos.Y}
+				if d.Len() > 50 {
+					continue
+				}
+
+				if num.Angle(&d, &creature.Dir) > creature.Eye.FOV {
+					continue
+				}
+
+				creature.Eye.Sees(static)
 			}
 		}
 	}
 }
 
 func (s *Collision) CreatureBorder() {
-	for _, c := range s.system.creatures {
-		if c.Pos.X < 0.0 {
-			s.cbCreatureBorder(c, collision.LEFT)
-		} else if c.Pos.X > s.system.Width {
-			s.cbCreatureBorder(c, collision.RIGHT)
-		} else if c.Pos.Y < 0.0 {
-			s.cbCreatureBorder(c, collision.TOP)
-		} else if c.Pos.Y > s.system.Height {
-			s.cbCreatureBorder(c, collision.BOT)
+	for _, cell := range s.cells {
+		for _, c := range cell.moving {
+			if c.Pos.X < 0.0 {
+				s.cbCreatureBorder(c, collision.LEFT)
+			} else if c.Pos.X > s.system.Width {
+				s.cbCreatureBorder(c, collision.RIGHT)
+			} else if c.Pos.Y < 0.0 {
+				s.cbCreatureBorder(c, collision.TOP)
+			} else if c.Pos.Y > s.system.Height {
+				s.cbCreatureBorder(c, collision.BOT)
+			}
 		}
 	}
 }
