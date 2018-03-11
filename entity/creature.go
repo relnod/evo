@@ -62,7 +62,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 	energyConsumption := rand.Float32() / 60
 	energy := radius
 	if radius > 4.0 {
-		speed = 5 / radius
+		speed = mutate(30.0/(radius*8.0), 0.1)
 		eye = &Eye{
 			Dir:   num.Vec2{},
 			Range: 20.0,

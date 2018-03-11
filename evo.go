@@ -6,11 +6,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/relnod/evo/collision"
 	"github.com/relnod/evo/config"
-	"github.com/relnod/evo/entity"
 	"github.com/relnod/evo/platform"
 	"github.com/relnod/evo/system"
+	"github.com/relnod/evo/world"
 )
 
 func main() {
@@ -22,7 +21,7 @@ type App struct {
 	ticksPerSecond int
 
 	window          *platform.Window
-	system          *system.System
+	world           *world.World
 	renderSystem    *system.Render
 	collisionSystem *system.Collision
 	entitySystem    *system.Entity
@@ -33,35 +32,27 @@ func NewApp() *App {
 	log.Println("Seed: ", seed)
 	rand.Seed(seed)
 
-	w := platform.NewWindow()
-	s := system.NewSystem(float32(w.Width), float32(w.Height), 1)
+	window := platform.NewWindow()
+	world := world.NewWorld(
+		float32(window.Width),
+		float32(window.Height),
+		world.EdgeModeLoop,
+		world.StartModeFixed,
+	)
 
 	app := &App{
 		ticksPerSecond:  60,
-		window:          w,
-		system:          s,
-		renderSystem:    system.NewRender(s, w),
-		collisionSystem: system.NewCollision(s, 4),
-		entitySystem:    system.NewEntity(s, system.ModeFixed),
+		window:          window,
+		world:           world,
+		renderSystem:    system.NewRender(world, window),
+		collisionSystem: system.NewCollision(world),
+		entitySystem:    system.NewEntity(world),
 	}
-
-	app.collisionSystem.SetCreatureBorderCB(func(e *entity.Creature, border int) {
-		switch border {
-		case collision.LEFT:
-			e.Pos.X += float32(app.system.Width)
-		case collision.RIGHT:
-			e.Pos.X -= float32(app.system.Width)
-		case collision.TOP:
-			e.Pos.Y += float32(app.system.Height)
-		case collision.BOT:
-			e.Pos.Y -= float32(app.system.Height)
-		}
-	})
 
 	app.renderSystem.Init()
 	app.entitySystem.Init()
 
-	w.AddKeyListener(func(e *platform.KeyEvent) {
+	window.AddKeyListener(func(e *platform.KeyEvent) {
 		switch e.KeyCode {
 		case 38: // UP
 			config.WorldSpeed += 5
@@ -70,7 +61,7 @@ func NewApp() *App {
 		}
 	})
 
-	w.AddMouseListener(func(e *platform.MouseEvent) {
+	window.AddMouseListener(func(e *platform.MouseEvent) {
 		creature := app.collisionSystem.FindCreature(&e.Pos)
 		if creature != nil {
 			fmt.Printf("Creature:\n")
@@ -91,6 +82,7 @@ func (app *App) Run() {
 }
 
 func (app *App) update() {
+	app.world.UpdateCells()
 	app.collisionSystem.Update()
 	app.entitySystem.Update()
 	app.renderSystem.Update()

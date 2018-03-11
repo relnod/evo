@@ -6,54 +6,46 @@ import (
 	"github.com/relnod/evo/collision"
 	"github.com/relnod/evo/entity"
 	"github.com/relnod/evo/num"
+	"github.com/relnod/evo/world"
 )
-
-const (
-	ModeRandom = iota
-	ModeFixed
-)
-
-type Mode int
 
 type Entity struct {
-	system *System
-	mode   Mode
+	world *world.World
 }
 
-func NewEntity(system *System, mode Mode) *Entity {
-	return &Entity{system: system, mode: mode}
+func NewEntity(world *world.World) *Entity {
+	return &Entity{world: world}
 }
 
 func (s *Entity) Init() {
-	for i := range s.system.creatures {
-
+	for i := range s.world.Creatures {
 		var radius float32 = 3.0
-		if s.mode == ModeRandom {
+		if s.world.StartMode == world.StartModeRandom {
 			radius = rand.Float32()*rand.Float32()*rand.Float32()*10 + 2.0
 		}
 
-		s.system.creatures[i] = entity.NewCreature(s.randomPosition(radius), radius)
+		s.world.Creatures[i] = entity.NewCreature(s.randomPosition(radius), radius)
 	}
 }
 
 func (s *Entity) Update() {
-	for i, c := range s.system.creatures {
+	for i, c := range s.world.Creatures {
 		c.Update()
 
 		if !c.Alive {
-			s.system.creatures = append(s.system.creatures[:i], s.system.creatures[i+1:]...)
+			s.world.Creatures = append(s.world.Creatures[:i], s.world.Creatures[i+1:]...)
 		}
 
 		if c.State == entity.StateBreading {
 			c.State = entity.StateAdult
 			c.LastBread = c.Age
-			// log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.system.creatures))
+			// log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.world.Creatures))
 			c.Energy -= c.Radius
 			for i := 0; i < rand.Intn(2)+1; i++ {
 				child := c.GetChild()
 				if c.Energy-child.Energy > 0 {
 					c.Energy -= child.Energy
-					s.system.creatures = append(s.system.creatures, child)
+					s.world.Creatures = append(s.world.Creatures, child)
 				}
 			}
 		}
@@ -62,11 +54,11 @@ func (s *Entity) Update() {
 
 func (s *Entity) randomPosition(radius float32) num.Vec2 {
 	pos := num.Vec2{
-		X: rand.Float32()*(s.system.Width-(2*radius)) + radius,
-		Y: rand.Float32()*(s.system.Height-(2*radius)) + radius,
+		X: rand.Float32()*(s.world.Width-(2*radius)) + radius,
+		Y: rand.Float32()*(s.world.Height-(2*radius)) + radius,
 	}
 
-	for _, creature := range s.system.creatures {
+	for _, creature := range s.world.Creatures {
 		if creature == nil {
 			continue
 		}

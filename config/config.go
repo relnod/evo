@@ -1,3 +1,3 @@
 package config
 
-var WorldSpeed float32 = 1.0
+var WorldSpeed float32 = 5.0

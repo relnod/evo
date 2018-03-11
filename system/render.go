@@ -8,6 +8,7 @@ import (
 	"github.com/gopherjs/webgl"
 	"github.com/relnod/evo/num"
 	"github.com/relnod/evo/platform"
+	"github.com/relnod/evo/world"
 )
 
 var vertexShader = `
@@ -39,7 +40,7 @@ type RenderType struct {
 }
 
 type Render struct {
-	system *System
+	world *world.World
 
 	canvas *js.Object
 
@@ -55,14 +56,14 @@ type Render struct {
 	circle RenderType
 }
 
-func NewRender(s *System, w *platform.Window) *Render {
-	return &Render{system: s, canvas: w.Canvas}
+func NewRender(s *world.World, w *platform.Window) *Render {
+	return &Render{world: s, canvas: w.Canvas}
 }
 
 func (r *Render) Update() {
 	r.Clear()
 
-	for _, c := range r.system.creatures {
+	for _, c := range r.world.Creatures {
 		if c.Speed == 0 {
 			r.SetColor(0.0, 1.0-4.0/c.Radius/3.0, 0.0, 0.0)
 		} else {
@@ -81,7 +82,7 @@ func (r *Render) Init() {
 		js.Global.Call("alert", "Error: "+err.Error())
 	}
 
-	gl.Viewport(0, 0, int(r.system.Width), int(r.system.Height))
+	gl.Viewport(0, 0, int(r.world.Width), int(r.world.Height))
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
@@ -107,8 +108,8 @@ func (r *Render) Init() {
 	gl.UseProgram(program)
 
 	mScale := num.NewMat4(
-		2.0/r.system.Width, 0, 0, 0,
-		0, -2.0/r.system.Height, 0, 0,
+		2.0/r.world.Width, 0, 0, 0,
+		0, -2.0/r.world.Height, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
@@ -121,7 +122,7 @@ func (r *Render) Init() {
 
 	r.gl = gl
 	r.program = program
-	r.aspect = r.system.Width / r.system.Height
+	r.aspect = r.world.Width / r.world.Height
 	r.aVertexPosition = gl.GetAttribLocation(program, "aVertexPosition")
 	r.uColor = gl.GetUniformLocation(program, "uColor")
 	r.mModel = gl.GetUniformLocation(program, "mModel")
