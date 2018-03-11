@@ -42,7 +42,7 @@ type Constants struct {
 }
 
 func NewCreature(pos num.Vec2, radius float32) *Creature {
-	return newCreature(pos, radius, newBrain(), 0)
+	return newCreature(pos, radius, newBrain(), 0, nil)
 }
 
 func (e *Creature) GetChild() *Creature {
@@ -53,20 +53,24 @@ func (e *Creature) GetChild() *Creature {
 		r = 10.0
 	}
 
-	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1)
+	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1, e.Eye)
 }
 
-func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
+func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int, eye *Eye) *Creature {
 	var speed float32 = 0.0
-	var eye *Eye
-	energyConsumption := rand.Float32() / 60
+	energyConsumption := rand.Float32() / 90
 	energy := radius
 	if radius > 4.0 {
-		speed = mutate(30.0/(radius*8.0), 0.1)
+		speed = mutate(30.0/(radius*8.0), 0.04)
+
+		var eyeRange float32 = 20.0
+		if eye != nil {
+			eyeRange = mutate(eye.Range, 0.1)
+		}
 		eye = &Eye{
 			Dir:   num.Vec2{},
-			Range: 20.0,
-			FOV:   5.0,
+			Range: eyeRange,
+			FOV:   eyeRange / 20,
 		}
 		energyConsumption *= -1.0
 		if brain == nil {
@@ -107,8 +111,8 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 func newBrain() *deep.Neural {
 	return deep.NewNeural(&deep.Config{
 		Inputs:     2,
-		Layout:     []int{2, 3, 3},
-		Activation: deep.ActivationSigmoid,
+		Layout:     []int{2, 4, 4},
+		Activation: deep.ActivationLinear,
 		Bias:       true,
 		Weight:     deep.NewNormal(1.0, 0.0),
 	})
@@ -166,16 +170,17 @@ func (e *Creature) Update() {
 			e.State = StateAdult
 		}
 	case StateAdult:
+		// if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
 		if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
 			e.State = StateBreading
 		}
 
 		if e.Speed > 0 {
 			e.updateFromBrain()
-		}
 
-		e.Pos.X += e.Dir.X * e.Speed * config.WorldSpeed
-		e.Pos.Y += e.Dir.Y * e.Speed * config.WorldSpeed
+			e.Pos.X += e.Dir.X * e.Speed * config.WorldSpeed
+			e.Pos.Y += e.Dir.Y * e.Speed * config.WorldSpeed
+		}
 
 		e.Energy += e.Consts.EnergyConsumption * config.WorldSpeed
 	}
@@ -184,21 +189,44 @@ func (e *Creature) Update() {
 }
 
 func (e *Creature) updateFromBrain() {
-	in1 := 0.1
-	in2 := 0.1
-	if e.Eye.Saw > 0 {
-		in1 = 0.9
-		in2 = float64(e.Eye.Saw) / 10.0
+	in1 := -0.9
+	in2 := -0.9
+	if e.Eye.Count > 0 {
+		in1 += float64(e.Eye.Count) / 10.0
+		if in1 > 0.9 {
+			in1 = 0.9
+		}
+
+		if e.Eye.Biggest > e.Radius {
+			in2 = 0.9
+		}
 		e.Eye.Reset()
 	}
+
 	out := e.Brain.Predict([]float64{in1, in2})
-	if out[0] < 0.5 {
-		if out[1] < 0.5 {
-			e.Dir.Rotate(out[2] / 20)
+	if out[0] < 0 {
+		rotation := 0.0
+		if out[1] < -0.5 {
+			rotation = 0.01
+		} else if out[1] < 0 {
+			rotation = 0.05
+		} else if out[1] < 0.5 {
+			rotation = 0.1
 		} else {
-			e.Dir.Rotate(-out[2] / 20)
+			rotation = 0.14
 		}
+
+		if out[2] < 0 {
+			rotation *= -1
+		}
+
+		e.Dir.Rotate(rotation)
 		e.Dir.Norm()
+	}
+
+	if out[3] > 0 {
+		e.Dir.X *= -1
+		e.Dir.Y *= -1
 	}
 
 	e.Eye.Dir = e.Dir
@@ -208,10 +236,15 @@ func (e *Creature) Collide(e2 *Creature) {
 	if e.Brain != nil && e2.Brain == nil {
 		e.Energy += e2.Radius / 2.0 * 3.0
 		e2.Die()
-	} else if e.Radius/e2.Radius > 1.1 {
+	} else if !e.IsSameSpecies(e2) {
 		e.Energy += e2.Radius / 2.0 * 3.0
 		e2.Die()
 	}
+}
+
+func (e *Creature) IsSameSpecies(e2 *Creature) bool {
+	diff := e.Radius / e2.Radius
+	return diff > 0.9 && diff < 1.1
 }
 
 func (e *Creature) IsAlive() bool {

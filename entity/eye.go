@@ -7,13 +7,18 @@ type Eye struct {
 	Range float32
 	FOV   float32
 
-	Saw float32
+	Count   int
+	Biggest float32
 }
 
 func (e *Eye) Sees(c *Creature) {
-	e.Saw = c.Radius
+	e.Count++
+	if c.Radius > e.Biggest {
+		e.Biggest = c.Radius
+	}
 }
 
 func (e *Eye) Reset() {
-	e.Saw = 0
+	e.Count = 0
+	e.Biggest = 0
 }

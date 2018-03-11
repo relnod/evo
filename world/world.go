@@ -48,8 +48,8 @@ type World struct {
 
 // NewWorld returns a new world.
 func NewWorld(width, height float32, edgeMode EdgeMode, startMode StartMode) *World {
-	numCells := 4
-	cellsPerRow := 2
+	numCells := 36
+	cellsPerRow := 6
 
 	numEntities := 1
 	if startMode == StartModeRandom {

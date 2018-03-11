@@ -37,7 +37,7 @@ func NewApp() *App {
 		float32(window.Width),
 		float32(window.Height),
 		world.EdgeModeLoop,
-		world.StartModeFixed,
+		world.StartModeRandom,
 	)
 
 	app := &App{
