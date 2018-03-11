@@ -46,8 +46,8 @@ func NewCreature(pos num.Vec2, radius float32) *Creature {
 }
 
 func (e *Creature) GetChild() *Creature {
-	r := mutate(e.Radius, 0.1, 0.05)
-	r = mutate(e.Radius, 0.9, 0.01)
+	r := mutate(e.Radius, 0.1, 0.5)
+	r = mutate(e.Radius, 0.9, 0.3)
 
 	if r < 2.0 {
 		r = 2.0
@@ -60,15 +60,15 @@ func (e *Creature) GetChild() *Creature {
 
 func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int, eye *Eye) *Creature {
 	var speed float32 = 0.0
-	energyConsumption := rand.Float32() / 90
+	energyConsumption := rand.Float32() / 120
 	energy := radius
 	if radius > 4.0 {
-		speed = mutate(30.0/(radius*8.0), 0.2, 1.0)
+		speed = mutate(15.0/(radius*radius), 0.2, 1.0)
 
 		var eyeRange float32 = mutate(20.0, 0.2, 1.0)
 		if eye != nil {
-			eyeRange = mutate(eye.Range, 0.1, 0.1)
-			eyeRange = mutate(eye.Range, 0.5, 0.01)
+			eyeRange = mutate(eye.Range, 0.1, 0.2)
+			eyeRange = mutate(eye.Range, 0.5, 0.1)
 		}
 		eye = &Eye{
 			Dir:   num.Vec2{},
@@ -245,7 +245,7 @@ func (e *Creature) Collide(e2 *Creature) {
 	if e.Brain != nil && e2.Brain == nil {
 		e.Energy += e2.Radius / 2.0 * 3.0
 		e2.Die()
-	} else if !e.IsSameSpecies(e2) {
+	} else if e.Radius > e2.Radius && !e.IsSameSpecies(e2) {
 		e.Energy += e2.Radius / 2.0 * 3.0
 		e2.Die()
 	}
