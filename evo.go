@@ -4,28 +4,24 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"strconv"
 	"time"
 
-	"github.com/gopherjs/gopherjs/js"
 	"github.com/relnod/evo/collision"
 	"github.com/relnod/evo/config"
 	"github.com/relnod/evo/entity"
-	"github.com/relnod/evo/num"
+	"github.com/relnod/evo/platform"
 	"github.com/relnod/evo/system"
 )
 
 func main() {
-	seed := time.Now().Unix()
-	log.Println("Seed: ", seed)
-	rand.Seed(seed)
-
 	app := NewApp()
 	app.Run()
 }
 
 type App struct {
-	ticksPerSecond  int
+	ticksPerSecond int
+
+	window          *platform.Window
 	system          *system.System
 	renderSystem    *system.Render
 	collisionSystem *system.Collision
@@ -33,38 +29,19 @@ type App struct {
 }
 
 func NewApp() *App {
-	document := js.Global.Get("document")
+	seed := time.Now().Unix()
+	log.Println("Seed: ", seed)
+	rand.Seed(seed)
 
-	// @todo: instead wait till dom is ready
-	time.Sleep(time.Millisecond)
+	w := platform.NewWindow()
+	s := system.NewSystem(float32(w.Width), float32(w.Height), 1)
 
-	window := js.Global.Get("window")
-	w, err := strconv.Atoi(window.Get("innerWidth").String())
-	if err != nil {
-		// @todo
-	}
-	h, err := strconv.Atoi(window.Get("innerHeight").String())
-	if err != nil {
-		// @todo
-	}
-
-	width := float32(w)
-	height := float32(h)
-
-	canvas := document.Call("createElement", "canvas")
-	canvas.Set("width", width)
-	canvas.Set("height", height)
-
-	body := document.Get("body")
-	body.Get("style").Set("margin", 0)
-	body.Call("appendChild", canvas)
-
-	s := system.NewSystem(width, height, 1)
 	app := &App{
 		ticksPerSecond:  60,
+		window:          w,
 		system:          s,
-		renderSystem:    system.NewRender(s, canvas),
-		collisionSystem: system.NewCollision(s, 36),
+		renderSystem:    system.NewRender(s, w),
+		collisionSystem: system.NewCollision(s, 4),
 		entitySystem:    system.NewEntity(s, system.ModeFixed),
 	}
 
@@ -84,25 +61,24 @@ func NewApp() *App {
 	app.renderSystem.Init()
 	app.entitySystem.Init()
 
-	js.Global.Call("addEventListener", "keyup", func(event *js.Object) {
-		keycode := event.Get("keyCode").Int()
-		if keycode == 38 { // UP
+	w.AddKeyListener(func(e *platform.KeyEvent) {
+		switch e.KeyCode {
+		case 38: // UP
 			config.WorldSpeed += 5
-		}
-		if keycode == 40 { // DOWN
+		case 40: // UP
 			config.WorldSpeed -= 5
 		}
-	}, false)
+	})
 
-	canvas.Call("addEventListener", "click", func(event *js.Object) {
-		creature := app.collisionSystem.FindCreature(&num.Vec2{X: float32(event.Get("clientX").Float()), Y: float32(event.Get("clientY").Float())})
+	w.AddMouseListener(func(e *platform.MouseEvent) {
+		creature := app.collisionSystem.FindCreature(&e.Pos)
 		if creature != nil {
 			fmt.Printf("Creature:\n")
 			fmt.Printf("Generation: %d\n", creature.Consts.Generation)
 			fmt.Printf("Radius: %f\n", creature.Radius)
 			fmt.Printf("\n")
 		}
-	}, false)
+	})
 
 	return app
 }
@@ -111,8 +87,6 @@ func (app *App) Run() {
 	for {
 		app.update()
 		time.Sleep(time.Second / time.Duration(app.ticksPerSecond))
-
-		// time.Sleep(time.Second)
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/webgl"
 	"github.com/relnod/evo/num"
+	"github.com/relnod/evo/platform"
 )
 
 var vertexShader = `
@@ -54,8 +55,8 @@ type Render struct {
 	circle RenderType
 }
 
-func NewRender(s *System, canvas *js.Object) *Render {
-	return &Render{system: s, canvas: canvas}
+func NewRender(s *System, w *platform.Window) *Render {
+	return &Render{system: s, canvas: w.Canvas}
 }
 
 func (r *Render) Update() {
