@@ -46,7 +46,9 @@ func NewCreature(pos num.Vec2, radius float32) *Creature {
 }
 
 func (e *Creature) GetChild() *Creature {
-	r := mutate(e.Radius, 0.2)
+	r := mutate(e.Radius, 0.1, 0.05)
+	r = mutate(e.Radius, 0.9, 0.01)
+
 	if r < 2.0 {
 		r = 2.0
 	} else if r > 10.0 {
@@ -61,11 +63,12 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 	energyConsumption := rand.Float32() / 90
 	energy := radius
 	if radius > 4.0 {
-		speed = mutate(30.0/(radius*8.0), 0.04)
+		speed = mutate(30.0/(radius*8.0), 0.2, 1.0)
 
-		var eyeRange float32 = 20.0
+		var eyeRange float32 = mutate(20.0, 0.2, 1.0)
 		if eye != nil {
-			eyeRange = mutate(eye.Range, 0.1)
+			eyeRange = mutate(eye.Range, 0.1, 0.1)
+			eyeRange = mutate(eye.Range, 0.5, 0.01)
 		}
 		eye = &Eye{
 			Dir:   num.Vec2{},
@@ -102,8 +105,8 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		Consts: Constants{
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
-			EnergyBreed:       mutate(radius*radius*radius, 0.2),
-			LifeExpectancy:    mutate(100, 0.2),
+			EnergyBreed:       mutate(radius*radius*radius, 0.2, 0.9),
+			LifeExpectancy:    mutate(100, 0.2, 1.0),
 		},
 	}
 }
@@ -123,10 +126,8 @@ func newMutateBrain(brain *deep.Neural) *deep.Neural {
 	for i := range dump.Weights {
 		for j := range dump.Weights[i] {
 			for k := range dump.Weights[i][j] {
-				r := rand.Float32()
-				if r < 2 {
-					dump.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.2)
-				}
+				dump.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.1, 0.05)
+				dump.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.5, 0.01)
 			}
 		}
 	}
@@ -134,11 +135,19 @@ func newMutateBrain(brain *deep.Neural) *deep.Neural {
 	return deep.FromDump(dump)
 }
 
-func mutate(val float32, fac float32) float32 {
+func mutate(val float32, fac float32, chance float32) float32 {
+	if rand.Float32() > chance {
+		return val
+	}
+
 	return val * (1.0 + (rand.Float32()-0.5)*fac)
 }
 
-func mutate64(val float64, fac float64) float64 {
+func mutate64(val float64, fac float64, chance float64) float64 {
+	if rand.Float64() > chance {
+		return val
+	}
+
 	return val * (1.0 + (rand.Float64()-0.5)*fac)
 }
 
