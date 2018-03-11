@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"github.com/relnod/evo/collision"
 	"github.com/relnod/evo/config"
 	"github.com/relnod/evo/entity"
+	"github.com/relnod/evo/num"
 	"github.com/relnod/evo/system"
 )
 
@@ -89,6 +91,16 @@ func NewApp() *App {
 		}
 		if keycode == 40 { // DOWN
 			config.WorldSpeed -= 5
+		}
+	}, false)
+
+	canvas.Call("addEventListener", "click", func(event *js.Object) {
+		creature := app.collisionSystem.FindCreature(&num.Vec2{X: float32(event.Get("clientX").Float()), Y: float32(event.Get("clientY").Float())})
+		if creature != nil {
+			fmt.Printf("Creature:\n")
+			fmt.Printf("Generation: %d\n", creature.Consts.Generation)
+			fmt.Printf("Radius: %f\n", creature.Radius)
+			fmt.Printf("\n")
 		}
 	}, false)
 

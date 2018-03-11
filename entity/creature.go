@@ -31,7 +31,7 @@ type Creature struct {
 	Age       float32
 	State     State
 
-	consts Constants
+	Consts Constants
 }
 
 type Constants struct {
@@ -53,7 +53,7 @@ func (e *Creature) GetChild() *Creature {
 		r = 10.0
 	}
 
-	return newCreature(e.Pos, r, e.Brain, e.consts.Generation+1)
+	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1)
 }
 
 func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int) *Creature {
@@ -95,7 +95,7 @@ func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation in
 		Age:       0,
 		State:     StateChild,
 
-		consts: Constants{
+		Consts: Constants{
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
 			EnergyBreed:       mutate(radius*radius*radius, 0.2),
@@ -149,7 +149,7 @@ func randomDir() num.Vec2 {
 }
 
 func (e *Creature) Update() {
-	if e.Energy <= 0 || e.Age > e.consts.LifeExpectancy {
+	if e.Energy <= 0 || e.Age > e.Consts.LifeExpectancy {
 		e.Die()
 	}
 
@@ -166,7 +166,7 @@ func (e *Creature) Update() {
 			e.State = StateAdult
 		}
 	case StateAdult:
-		if e.Energy > e.consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
+		if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
 			e.State = StateBreading
 		}
 
@@ -177,7 +177,7 @@ func (e *Creature) Update() {
 		e.Pos.X += e.Dir.X * e.Speed * config.WorldSpeed
 		e.Pos.Y += e.Dir.Y * e.Speed * config.WorldSpeed
 
-		e.Energy += e.consts.EnergyConsumption * config.WorldSpeed
+		e.Energy += e.Consts.EnergyConsumption * config.WorldSpeed
 	}
 
 	e.Age += 0.01 * config.WorldSpeed

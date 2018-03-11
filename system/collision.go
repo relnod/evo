@@ -13,6 +13,10 @@ type Collision struct {
 
 	cbCreatureBorder func(*entity.Creature, int)
 
+	cellsPerRow int
+	cellWidth   float32
+	cellHeight  float32
+
 	cells []*cell
 }
 
@@ -25,6 +29,22 @@ type cell struct {
 
 	static []*entity.Creature
 	moving []*entity.Creature
+}
+
+func (cell *cell) FindCreature(pos *num.Vec2) *entity.Creature {
+	for _, c := range cell.moving {
+		if collision.CirclePoint(&c.Pos, c.Radius+1, pos) {
+			return c
+		}
+	}
+
+	for _, c := range cell.static {
+		if collision.CirclePoint(&c.Pos, c.Radius+1, pos) {
+			return c
+		}
+	}
+
+	return nil
 }
 
 func NewCollision(s *System, numCells int) *Collision {
@@ -41,15 +61,25 @@ func NewCollision(s *System, numCells int) *Collision {
 			cells[row*cellsPerRow+col] = &cell{
 				topLeft:  num.Vec2{X: cellWidth * float32(row), Y: cellHeight * float32(col)},
 				botRight: num.Vec2{X: cellWidth * float32(row+1), Y: cellHeight * float32(col+1)},
+
+				static: make([]*entity.Creature, 0),
+				moving: make([]*entity.Creature, 0),
 			}
 
-			cells[row*cellsPerRow+col].center = num.Vec2{X: cells[row*cellsPerRow+col].topLeft.X + cellWidth, Y: cells[row*cellsPerRow+col].topLeft.Y + cellHeight}
+			cells[row*cellsPerRow+col].center = num.Vec2{
+				X: cells[row*cellsPerRow+col].topLeft.X + cellWidth/2.0,
+				Y: cells[row*cellsPerRow+col].topLeft.Y + cellHeight/2.0,
+			}
 			cells[row*cellsPerRow+col].radius = radius
 		}
 	}
 
 	return &Collision{
 		system: s,
+
+		cellsPerRow: cellsPerRow,
+		cellWidth:   cellWidth,
+		cellHeight:  cellHeight,
 
 		cells: cells,
 	}
@@ -154,4 +184,26 @@ func (s *Collision) CreatureBorder() {
 
 func (s *Collision) SetCreatureBorderCB(cb func(*entity.Creature, int)) {
 	s.cbCreatureBorder = cb
+}
+
+func (s *Collision) findCell(pos *num.Vec2) *cell {
+	x := pos.X / s.cellWidth
+	y := pos.Y / s.cellHeight
+
+	index := int(y)*s.cellsPerRow + int(x)
+
+	if index > 0 && index > len(s.cells)-1 {
+		return nil
+	}
+
+	return s.cells[index]
+}
+
+func (s *Collision) FindCreature(pos *num.Vec2) *entity.Creature {
+	cell := s.findCell(pos)
+	if cell == nil {
+		return nil
+	}
+
+	return cell.FindCreature(pos)
 }
