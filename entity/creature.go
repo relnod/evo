@@ -59,22 +59,18 @@ func (e *Creature) GetChild() *Creature {
 }
 
 func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int, eye *Eye) *Creature {
-	var speed float32 = 0.0
+	var speed float32
 	energyConsumption := rand.Float32() / 120
 	energy := radius
 	if radius > 4.0 {
 		speed = mutate(15.0/(radius*radius), 0.2, 1.0)
 
-		var eyeRange float32 = mutate(20.0, 0.2, 1.0)
+		eyeRange := mutate(20.0, 0.2, 1.0)
 		if eye != nil {
 			eyeRange = mutate(eye.Range, 0.1, 0.2)
 			eyeRange = mutate(eye.Range, 0.5, 0.1)
 		}
-		eye = &Eye{
-			Dir:   num.Vec2{},
-			Range: eyeRange,
-			FOV:   eyeRange / 20,
-		}
+		eye = NewEye(eyeRange)
 		energyConsumption *= -1.0
 		if brain == nil {
 			brain = newBrain()

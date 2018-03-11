@@ -1,6 +1,10 @@
 package entity
 
-import "github.com/relnod/evo/num"
+import (
+	"math"
+
+	"github.com/relnod/evo/num"
+)
 
 type Eye struct {
 	Dir   num.Vec2
@@ -9,6 +13,14 @@ type Eye struct {
 
 	Count   int
 	Biggest float32
+}
+
+func NewEye(eyeRange float32) *Eye {
+	return &Eye{
+		Dir:   num.Vec2{},
+		Range: eyeRange,
+		FOV:   (80 / eyeRange * 40) * math.Pi / 180.0,
+	}
 }
 
 func (e *Eye) Sees(c *Creature) {
