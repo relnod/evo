@@ -58,16 +58,24 @@ func NewApp() *App {
 			config.WorldSpeed += 5
 		case 40: // UP
 			config.WorldSpeed -= 5
+		case 73: // I
+			fmt.Printf("\n")
+			log.Printf("Population\n")
+			fmt.Printf("Total: %d\n", len(world.Creatures))
 		}
 	})
 
 	window.AddMouseListener(func(e *platform.MouseEvent) {
 		creature := app.collisionSystem.FindCreature(&e.Pos)
 		if creature != nil {
-			fmt.Printf("Creature:\n")
+			fmt.Printf("\n")
+			log.Printf("Creature\n")
 			fmt.Printf("Generation: %d\n", creature.Consts.Generation)
 			fmt.Printf("Radius: %f\n", creature.Radius)
-			fmt.Printf("\n")
+			if creature.Eye != nil {
+				fmt.Printf("EyeRange: %f\n", creature.Eye.Range)
+				fmt.Printf("EyeFOV: %f\n", creature.Eye.FOV)
+			}
 		}
 	})
 

@@ -117,13 +117,13 @@ func (s *Collision) FindCreature(pos *num.Vec2) *entity.Creature {
 	}
 
 	for _, c := range cell.Dynamic {
-		if collision.CirclePoint(&c.Pos, c.Radius+1, pos) {
+		if collision.CirclePoint(&c.Pos, c.Radius+5, pos) {
 			return c
 		}
 	}
 
 	for _, c := range cell.Static {
-		if collision.CirclePoint(&c.Pos, c.Radius+1, pos) {
+		if collision.CirclePoint(&c.Pos, c.Radius+5, pos) {
 			return c
 		}
 	}
