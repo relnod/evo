@@ -1,14 +1,17 @@
 package system
 
 import (
+	"encoding/binary"
 	"log"
 	"math"
 
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/webgl"
+	"github.com/goxjs/gl"
+	"github.com/goxjs/glfw"
 	"github.com/relnod/evo/num"
-	"github.com/relnod/evo/platform"
 	"github.com/relnod/evo/world"
+	"golang.org/x/mobile/exp/f32"
 )
 
 var vertexShader = `
@@ -34,7 +37,7 @@ void main() {
 `
 
 type RenderType struct {
-	VB       *js.Object
+	VB       gl.Buffer
 	ItemSize int
 	NumItems int
 }
@@ -42,28 +45,33 @@ type RenderType struct {
 type Render struct {
 	world *world.World
 
+	window *glfw.Window
+
 	canvas *js.Object
 
 	gl      *webgl.Context
-	program *js.Object
+	program gl.Program
 	aspect  float32
 
-	aVertexPosition int
-	uColor          *js.Object
-	mModel          *js.Object
-	mWorld          *js.Object
+	aVertexPosition gl.Attrib
+	uColor          gl.Uniform
+	mModel          gl.Uniform
+	mWorld          gl.Uniform
 
 	circle RenderType
 }
 
-func NewRender(s *world.World, w *platform.Window) *Render {
-	return &Render{world: s, canvas: w.Canvas}
+func NewRender(w *world.World) *Render {
+	return &Render{world: w}
 }
 
-func (r *Render) Update() {
+func (r *Render) UpdateWorld(w *world.World) {
+
+	r.window.SwapBuffers()
+	glfw.PollEvents()
 	r.Clear()
 
-	for _, c := range r.world.Creatures {
+	for _, c := range w.Creatures {
 		if c.Speed == 0 {
 			r.SetColor(0.0, 1.0-4.0/c.Radius/3.0, 0.0, 0.0)
 		} else {
@@ -71,16 +79,31 @@ func (r *Render) Update() {
 		}
 		r.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
 	}
+
+	if gl.GetError() != gl.NO_ERROR {
+		log.Println("OPENGL Error: ", gl.GetString(gl.GetError()))
+	}
+}
+
+func (r *Render) Update() {
+	r.UpdateWorld(r.world)
 }
 
 func (r *Render) Init() {
-	attrs := webgl.DefaultAttributes()
-	attrs.Alpha = false
-
-	gl, err := webgl.NewContext(r.canvas, attrs)
+	err := glfw.Init(gl.ContextWatcher)
 	if err != nil {
-		js.Global.Call("alert", "Error: "+err.Error())
+		panic(err)
 	}
+	// defer glfw.Terminate()
+
+	// width, height := glfw.GetPrimaryMonitor().GetPhysicalSize()
+	window, err := glfw.CreateWindow(500, 500, "Evo", nil, nil)
+	if err != nil {
+		panic(err)
+	}
+	window.MakeContextCurrent()
+	r.window = window
+	glfw.SwapInterval(0)
 
 	gl.Viewport(0, 0, int(r.world.Width), int(r.world.Height))
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
@@ -89,14 +112,14 @@ func (r *Render) Init() {
 	vs := gl.CreateShader(gl.VERTEX_SHADER)
 	gl.ShaderSource(vs, vertexShader)
 	gl.CompileShader(vs)
-	if !gl.GetShaderParameterb(vs, gl.COMPILE_STATUS) {
+	if gl.GetShaderi(vs, gl.COMPILE_STATUS) == 0 {
 		log.Fatal(gl.GetShaderInfoLog(vs))
 	}
 
 	fs := gl.CreateShader(gl.FRAGMENT_SHADER)
 	gl.ShaderSource(fs, fragmentShader)
 	gl.CompileShader(fs)
-	if !gl.GetShaderParameterb(fs, gl.COMPILE_STATUS) {
+	if gl.GetShaderi(fs, gl.COMPILE_STATUS) == 0 {
 		log.Fatal(gl.GetShaderInfoLog(fs))
 	}
 
@@ -120,7 +143,6 @@ func (r *Render) Init() {
 		0, 0, 0, 1,
 	)
 
-	r.gl = gl
 	r.program = program
 	r.aspect = r.world.Width / r.world.Height
 	r.aVertexPosition = gl.GetAttribLocation(program, "aVertexPosition")
@@ -128,17 +150,16 @@ func (r *Render) Init() {
 	r.mModel = gl.GetUniformLocation(program, "mModel")
 	r.mWorld = gl.GetUniformLocation(program, "mWorld")
 
-	program.Set("uColor", r.uColor)
+	// gl.Get
+	// gl.Setprogram.Set("uColor", r.uColor)
 
-	gl.UniformMatrix4fv(r.mWorld, false, mTranslation.Mult(mScale).Transpose().Data)
+	gl.UniformMatrix4fv(r.mWorld, mTranslation.Mult(mScale).Transpose().Data)
 
 	r.initCircleType()
 }
 
 func (r *Render) initCircleType() {
-	gl := r.gl
-
-	vertices := make([]float32, 200)
+	vertices := make([]float32, 400)
 	vertices[0] = 0
 	vertices[1] = 0
 
@@ -153,8 +174,9 @@ func (r *Render) initCircleType() {
 
 	vbuffer := gl.CreateBuffer()
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbuffer)
-	gl.BufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
-	gl.BindBuffer(gl.ARRAY_BUFFER, nil)
+	verticesBytes := f32.Bytes(binary.LittleEndian, vertices...)
+	gl.BufferData(gl.ARRAY_BUFFER, verticesBytes, gl.STATIC_DRAW)
+	// gl.BindBuffer(gl.ARRAY_BUFFER, nil)
 
 	itemSize := 2
 	numItems := len(vertices) / itemSize
@@ -163,22 +185,19 @@ func (r *Render) initCircleType() {
 }
 
 func (r *Render) Clear() {
-	gl := r.gl
-
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 }
 
 func (Render *Render) SetColor(r, g, b, a float32) {
-	Render.gl.Uniform4f(Render.uColor, r, g, b, a)
+	gl.Uniform4f(Render.uColor, r, g, b, a)
 }
 
 func (r *Render) DrawCircle(x, y, radius float32) {
-	gl := r.gl
-	program := r.program
+	// log.Println(x, y, radius)
+	// program := r.program
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.circle.VB)
 
-	program.Set("aVertexPosition", r.aVertexPosition)
 	gl.EnableVertexAttribArray(r.aVertexPosition)
 	gl.VertexAttribPointer(r.aVertexPosition, r.circle.ItemSize, gl.FLOAT, false, 0, 0)
 
@@ -194,8 +213,8 @@ func (r *Render) DrawCircle(x, y, radius float32) {
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
-	gl.UniformMatrix4fv(r.mModel, false, mTranslation.Mult(mScale).Transpose().Data)
+	gl.UniformMatrix4fv(r.mModel, mTranslation.Mult(mScale).Transpose().Data)
 
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, r.circle.NumItems)
-	gl.BindBuffer(gl.ARRAY_BUFFER, nil)
+	// gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }

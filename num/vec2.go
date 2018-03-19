@@ -5,8 +5,8 @@ import (
 )
 
 type Vec2 struct {
-	X float32
-	Y float32
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
 }
 
 func (v *Vec2) Len() float32 {

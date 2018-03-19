@@ -28,18 +28,18 @@ const (
 
 // World holds all global world data
 type World struct {
-	Width  float32
-	Height float32
+	Width  float32 `json:"width"`
+	Height float32 `json:"height"`
 
-	EdgeMode  EdgeMode
-	StartMode StartMode
+	EdgeMode  EdgeMode  `json:"-"`
+	StartMode StartMode `json:"-"`
 
-	Creatures []*entity.Creature
+	Creatures []*entity.Creature `json:"entities"`
 
-	Static  []*entity.Creature
-	Dynamic []*entity.Creature
+	Static  []*entity.Creature `json:"-"`
+	Dynamic []*entity.Creature `json:"-"`
 
-	Cells       []*Cell
+	Cells       []*Cell `json:"-"`
 	numCells    int
 	cellsPerRow int
 	cellWidth   float32
@@ -140,4 +140,13 @@ func (w *World) FindCell(pos *num.Vec2) *Cell {
 	}
 
 	return w.Cells[index]
+}
+
+func (w *World) RemoveCreature(i int) {
+	if i+1 >= len(w.Creatures) {
+		w.Creatures = w.Creatures[:i]
+		return
+	}
+
+	w.Creatures = append(w.Creatures[:i], w.Creatures[i+1:]...)
 }

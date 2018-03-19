@@ -17,21 +17,21 @@ const (
 )
 
 type Creature struct {
-	Pos    num.Vec2
-	Radius float32
-	Speed  float32
-	Dir    num.Vec2
+	Pos    num.Vec2 `json:"pos"`
+	Radius float32  `json:"radius"`
+	Speed  float32  `json:"speed"`
+	Dir    num.Vec2 `json:"-"`
 
-	Eye   *Eye
-	Brain *deep.Neural
+	Eye   *Eye         `json:"-"`
+	Brain *deep.Neural `json:"-"`
 
-	Alive     bool
-	Energy    float32
-	LastBread float32
-	Age       float32
-	State     State
+	Alive     bool    `json:"-"`
+	Energy    float32 `json:"-"`
+	LastBread float32 `json:"-"`
+	Age       float32 `json:"-"`
+	State     State   `json:"-"`
 
-	Consts Constants
+	Consts Constants `json:"-"`
 }
 
 type Constants struct {

@@ -33,7 +33,8 @@ func (s *Entity) Update() {
 		c.Update()
 
 		if !c.Alive {
-			s.world.Creatures = append(s.world.Creatures[:i], s.world.Creatures[i+1:]...)
+			s.world.RemoveCreature(i)
+			continue
 		}
 
 		if c.State == entity.StateBreading {
