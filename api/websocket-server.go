@@ -1,10 +1,11 @@
-package evo
+package api
 
 import (
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/relnod/evo"
 	"github.com/relnod/evo/world"
 )
 
@@ -19,12 +20,12 @@ var upgrader = websocket.Upgrader{
 
 // WebsocketServer implements the internal cient interface.
 type WebsocketServer struct {
-	server Server
+	server evo.Server
 	addr   string
 }
 
 // NewWebsocketServer returns a new websocket server.
-func NewWebsocketServer(server Server, addr string) *WebsocketServer {
+func NewWebsocketServer(server evo.Server, addr string) *WebsocketServer {
 	return &WebsocketServer{
 		server: server,
 		addr:   addr,

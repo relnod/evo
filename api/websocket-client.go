@@ -1,4 +1,4 @@
-package evo
+package api
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/goxjs/websocket"
 
+	"github.com/relnod/evo"
 	"github.com/relnod/evo/world"
 	uuid "github.com/satori/go.uuid"
 )
@@ -19,7 +20,7 @@ type WebsocketClient struct {
 	decoder *json.Decoder
 
 	// TODO: only one stream should be needed here.
-	streams map[uuid.UUID]Stream
+	streams map[uuid.UUID]evo.Stream
 }
 
 // NewWebsocketClient returns a new websocket client with a given address.
@@ -35,7 +36,7 @@ func NewWebsocketClient(addr string) *WebsocketClient {
 		conn:    conn,
 		decoder: json.NewDecoder(conn),
 
-		streams: make(map[uuid.UUID]Stream),
+		streams: make(map[uuid.UUID]evo.Stream),
 	}
 }
 
@@ -64,7 +65,7 @@ func (c *WebsocketClient) GetWorld() *world.World {
 
 // RegisterStream registers a stream via the websocket connection.
 // TODO: actually register the stream.
-func (c *WebsocketClient) RegisterStream(stream Stream) uuid.UUID {
+func (c *WebsocketClient) RegisterStream(stream evo.Stream) uuid.UUID {
 	u := uuid.Must(uuid.NewV4())
 	c.streams[u] = stream
 
