@@ -18,9 +18,14 @@ func NewRenderClient(server Server) *RenderClient {
 
 // Init intitializes the window and renderer.
 func (c *RenderClient) Init() {
+	window := system.NewWindow()
 	renderer := system.NewRender(c.server.GetWorld())
+
+	window.Init()
 	renderer.Init()
+
 	c.server.RegisterStream(func(w *world.World) {
+		window.Update()
 		renderer.UpdateWorld(w)
 	})
 }

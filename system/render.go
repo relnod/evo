@@ -8,7 +8,6 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/webgl"
 	"github.com/goxjs/gl"
-	"github.com/goxjs/glfw"
 	"github.com/relnod/evo/num"
 	"github.com/relnod/evo/world"
 	"golang.org/x/mobile/exp/f32"
@@ -45,8 +44,6 @@ type RenderType struct {
 type Render struct {
 	world *world.World
 
-	window *glfw.Window
-
 	canvas *js.Object
 
 	gl      *webgl.Context
@@ -66,9 +63,6 @@ func NewRender(w *world.World) *Render {
 }
 
 func (r *Render) UpdateWorld(w *world.World) {
-
-	r.window.SwapBuffers()
-	glfw.PollEvents()
 	r.Clear()
 
 	for _, c := range w.Creatures {
@@ -90,21 +84,6 @@ func (r *Render) Update() {
 }
 
 func (r *Render) Init() {
-	err := glfw.Init(gl.ContextWatcher)
-	if err != nil {
-		panic(err)
-	}
-	// defer glfw.Terminate()
-
-	// width, height := glfw.GetPrimaryMonitor().GetPhysicalSize()
-	window, err := glfw.CreateWindow(500, 500, "Evo", nil, nil)
-	if err != nil {
-		panic(err)
-	}
-	window.MakeContextCurrent()
-	r.window = window
-	glfw.SwapInterval(0)
-
 	gl.Viewport(0, 0, int(r.world.Width), int(r.world.Height))
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
