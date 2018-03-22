@@ -15,7 +15,6 @@ type Simulation struct {
 	ticksPerSecond int
 
 	world           *world.World
-	renderSystem    *system.Render
 	collisionSystem *system.Collision
 	entitySystem    *system.Entity
 

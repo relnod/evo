@@ -7,7 +7,7 @@ import (
 	"github.com/relnod/evo/api"
 )
 
-var addr = flag.String("addr", "localhost:8080", "address")
+var addr = flag.String("addr", ":8080", "address")
 
 func main() {
 	flag.Parse()

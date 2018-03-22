@@ -1,4 +1,4 @@
-package system
+package graphics
 
 import (
 	"encoding/binary"

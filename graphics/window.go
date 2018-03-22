@@ -1,4 +1,4 @@
-package system
+package graphics
 
 import (
 	"github.com/goxjs/gl"
