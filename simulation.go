@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/relnod/evo/entity"
+	"github.com/relnod/evo/num"
 	"github.com/relnod/evo/system"
 	"github.com/relnod/evo/world"
 	uuid "github.com/satori/go.uuid"
@@ -65,6 +67,10 @@ func (s *Simulation) Start() {
 
 func (s *Simulation) GetWorld() *world.World {
 	return s.world
+}
+
+func (s *Simulation) GetEntityAt(pos *num.Vec2) *entity.Creature {
+	return s.collisionSystem.FindCreature(pos)
 }
 
 func (s *Simulation) RegisterStream(stream Stream) uuid.UUID {

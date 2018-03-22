@@ -1,6 +1,9 @@
 package evo
 
-import "github.com/relnod/evo/world"
+import (
+	"github.com/relnod/evo/entity"
+	"github.com/relnod/evo/world"
+)
 
 // type EventType int
 
@@ -15,3 +18,5 @@ import "github.com/relnod/evo/world"
 
 // Stream defines a world stream.
 type Stream func(*world.World)
+
+type GetEntityCB func(*entity.Creature)

@@ -1,11 +1,13 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 	"github.com/relnod/evo"
+	"github.com/relnod/evo/num"
 	"github.com/relnod/evo/world"
 )
 
@@ -67,10 +69,21 @@ func (c *WebsocketServer) handleConnection(w http.ResponseWriter, r *http.Reques
 	defer c.server.UnRegisterStream(id)
 
 	for {
-		_, _, err := conn.ReadMessage()
+		event := Event{}
+		err := conn.ReadJSON(&event)
 		if err != nil {
+			log.Println(err)
 			// Disconnect
 			break
+		}
+
+		switch event.Type {
+		case TGetEntityAt:
+			log.Println(event.Message)
+			pos := &num.Vec2{}
+			json.Unmarshal(event.Message, pos)
+			e := c.server.GetEntityAt(pos)
+			conn.WriteJSON(e)
 		}
 	}
 }
