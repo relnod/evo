@@ -5,6 +5,9 @@ STATIC_WEB_DIR=${WORK_DIR}/cmd/evo-web/static
 ${shell mkdir -p ${OUT_DIR}}
 
 all: build
+	
+dev:
+	docker-compose -f docker-compose.yml -f docker-compose-dev.yml up --build
 
 build: build-server build-web
 
@@ -16,11 +19,11 @@ build-web: dep-web build-web-client build-web-app
 
 build-web-client:
 	cd cmd/evo-client && \
-	gopherjs build -v -o ${STATIC_WEB_DIR}/evo-client.js
+	gopherjs build -o ${STATIC_WEB_DIR}/evo-client.js
 
 build-web-app:
 	cd cmd/evo && \
-	gopherjs build -v -o ${STATIC_WEB_DIR}/evo-app.js
+	gopherjs build -o ${STATIC_WEB_DIR}/evo-app.js
 
 dep-web:
 	go get github.com/gopherjs/gopherjs

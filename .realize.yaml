@@ -1,0 +1,43 @@
+settings:
+  files:
+    outputs:
+      status: false
+      path: ""
+      name: .r.outputs.log
+    logs:
+      status: false
+      path: ""
+      name: .r.logs.log
+    errors:
+      status: false
+      path: ""
+      name: .r.errors.log
+  legacy:
+    force: false
+    interval: 100ms
+server:
+  status: false
+  open: false
+  port: 0
+  host: ""
+schema:
+- name: /home/paul/go/src/github.com/relnod/evo
+  path: /home/paul/go/src/github.com/relnod/evo
+  commands:
+    # install:
+    #   status: true
+    # run:
+    #   status: true
+    build:
+        status: true
+        # method: "echo test"
+        method: "make build-web"
+  watcher:
+    paths:
+    - .
+    extensions:
+    - go
+    ignored_paths:
+    - .git
+    - .realize
+    - vendor

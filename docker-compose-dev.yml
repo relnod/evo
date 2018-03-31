@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  evo-server:
+    ports: 
+        - "8080:8080"
+  evo-web:
+    command: "localhost:8080"
+    volumes:
+        - ./cmd/evo-web/static:/usr/share/nginx/html
+    ports:
+        - "9090:80"
+  reload:
+    build: 
+        context: './'
+        dockerfile: './build/reload/Dockerfile'
+    volumes:
+        - $GOPATH/src:/go/src
+    working_dir: /go/src/github.com/relnod/evo
