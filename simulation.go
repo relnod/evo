@@ -67,7 +67,7 @@ func (s *Simulation) GetWorld() *world.World {
 }
 
 func (s *Simulation) RegisterStream(stream Stream) uuid.UUID {
-	u := uuid.Must(uuid.NewV4())
+	u := uuid.NewV4()
 	s.streams[u] = stream
 
 	return u
