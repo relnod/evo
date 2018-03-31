@@ -66,7 +66,7 @@ func (c *WebsocketClient) GetWorld() *world.World {
 // RegisterStream registers a stream via the websocket connection.
 // TODO: actually register the stream.
 func (c *WebsocketClient) RegisterStream(stream evo.Stream) uuid.UUID {
-	u := uuid.Must(uuid.NewV4())
+	u := uuid.NewV4()
 	c.streams[u] = stream
 
 	return u
