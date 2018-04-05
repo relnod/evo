@@ -5,11 +5,7 @@ services:
     build: 
         context: './'
         dockerfile: './cmd/evo-server/Dockerfile' 
-    ports: 
-        - "8080:8080"
   evo-web:
     build:
         context: './'
         dockerfile: './cmd/evo-web/Dockerfile'
-    ports:
-        - "9090:80"

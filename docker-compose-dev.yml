@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  evo-server:
+    # ports: 
+    #     - "8080:8080"
+    entrypoint: ""
+  evo-web:
+    ports:
+        - "9090:80"
+    volumes: 
+        - ./out/static:/usr/share/nginx/html
+  watcher:
+    build:
+        context: './'
+        dockerfile: './build/dev/Dockerfile'
+    volumes: 
+        - ./:/go/src/github.com/relnod/evo/
+    ports: 
+        - "8080:8080"
