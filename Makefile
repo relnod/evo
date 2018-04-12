@@ -28,6 +28,7 @@ build-web-app:
 	gopherjs build -o ${STATIC_WEB_DIR}/evo-app.js
 
 dep-web:
+	go get -tags=js github.com/goxjs/glfw
 	go get github.com/gopherjs/gopherjs
 	go get github.com/gopherjs/gopherjs/js
 
