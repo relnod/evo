@@ -9,6 +9,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gopherjs/gopherjs"
+  packages = ["js"]
+  revision = "8dffc02ea1cb8398bb73f30424697c60fcf8d4c5"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gopherjs/webgl"
   packages = ["."]
   revision = "4814cc33476aa4cf60c7a83841b0e21026951687"
@@ -67,6 +73,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c54600a0f4dd9c3c38629c20b4232d4c42d07e01d5c0d7462882cd42677efb95"
+  inputs-digest = "17ace622b1455508df3d3830df228446e60812cc734679ef806c46bb9bd9935d"
   solver-name = "gps-cdcl"
   solver-version = 1

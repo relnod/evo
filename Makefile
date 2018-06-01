@@ -40,7 +40,6 @@ build-desktop-app: dep-desktop
 dep-web:
 	go get -tags=js github.com/goxjs/glfw
 	go get github.com/gopherjs/gopherjs
-	go get github.com/gopherjs/gopherjs/js
 
 dep-desktop:
 	go get -u github.com/go-gl/glfw/v3.2/glfw

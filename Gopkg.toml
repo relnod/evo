@@ -1,7 +1,4 @@
 ignored = [
-    # See https://github.com/gopherjs/gopherjs/issues/415
-    "github.com/gopherjs/gopherjs/js",
-
     # See https://github.com/go-gl/glfw/issues/166
     "github.com/goxjs/glfw"
 ]
