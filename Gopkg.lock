@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/go-gl/gl"
   packages = ["v2.1/gl"]
-  revision = "f8cee0ff968a2dd4ef2786e7a4c843a451cd40a7"
+  revision = "68e2537930806bfcee1b92a0e14b4e9b8bb3a3e3"
 
 [[projects]]
   branch = "master"
@@ -23,7 +23,7 @@
   branch = "master"
   name = "github.com/gopherjs/webgl"
   packages = ["."]
-  revision = "4814cc33476aa4cf60c7a83841b0e21026951687"
+  revision = "39bd6d41eeb587730fcaa65adf71978fb10675bc"
 
 [[projects]]
   branch = "master"
@@ -74,13 +74,13 @@
   branch = "master"
   name = "golang.org/x/mobile"
   packages = ["exp/f32"]
-  revision = "54bca6061991cbde3139dc01ec713e2bba9cdb51"
+  revision = "5665cf37628bb651a12968646808b67661ad9afb"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["websocket"]
-  revision = "b68f30494add4df6bd8ef5e82803f308e7f7c59c"
+  revision = "1e491301e022f8f977054da4c2d852decd59571f"
 
 [[projects]]
   branch = "master"
