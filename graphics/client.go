@@ -18,8 +18,10 @@ func NewClient(server evo.Server) *Client {
 
 // Init intitializes the window and renderer.
 func (c *Client) Init() {
-	window := NewWindow()
-	renderer := NewRender(c.server.GetWorld())
+	w := c.server.GetWorld()
+
+	window := NewWindow(int(w.Width), int(w.Height))
+	renderer := NewRender(w.Width, w.Height)
 
 	window.Init()
 	renderer.Init()

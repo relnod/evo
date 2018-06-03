@@ -42,7 +42,8 @@ type RenderType struct {
 }
 
 type Render struct {
-	world *world.World
+	width  float32
+	height float32
 
 	canvas *js.Object
 
@@ -58,8 +59,8 @@ type Render struct {
 	circle RenderType
 }
 
-func NewRender(w *world.World) *Render {
-	return &Render{world: w}
+func NewRender(width, height float32) *Render {
+	return &Render{width: width, height: height}
 }
 
 func (r *Render) UpdateWorld(w *world.World) {
@@ -79,12 +80,8 @@ func (r *Render) UpdateWorld(w *world.World) {
 	}
 }
 
-func (r *Render) Update() {
-	r.UpdateWorld(r.world)
-}
-
 func (r *Render) Init() {
-	gl.Viewport(0, 0, int(r.world.Width), int(r.world.Height))
+	gl.Viewport(0, 0, int(r.width), int(r.height))
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
@@ -110,8 +107,8 @@ func (r *Render) Init() {
 	gl.UseProgram(program)
 
 	mScale := num.NewMat4(
-		2.0/r.world.Width, 0, 0, 0,
-		0, -2.0/r.world.Height, 0, 0,
+		2.0/r.width, 0, 0, 0,
+		0, -2.0/r.height, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
@@ -123,7 +120,7 @@ func (r *Render) Init() {
 	)
 
 	r.program = program
-	r.aspect = r.world.Width / r.world.Height
+	r.aspect = r.width / r.height
 	r.aVertexPosition = gl.GetAttribLocation(program, "aVertexPosition")
 	r.uColor = gl.GetUniformLocation(program, "uColor")
 	r.mModel = gl.GetUniformLocation(program, "mModel")
