@@ -1,8 +1,3 @@
-ignored = [
-    # See https://github.com/go-gl/glfw/issues/166
-    "github.com/goxjs/glfw"
-]
-
 [[constraint]]
   branch = "master"
   name = "github.com/gopherjs/webgl"

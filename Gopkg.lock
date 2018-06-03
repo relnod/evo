@@ -9,6 +9,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/go-gl/glfw"
+  packages = ["v3.2/glfw"]
+  revision = "46a8d530c3268b31eeb1310f30fe42be1cae98f2"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gopherjs/gopherjs"
   packages = ["js"]
   revision = "8dffc02ea1cb8398bb73f30424697c60fcf8d4c5"
@@ -42,6 +48,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/goxjs/glfw"
+  packages = ["."]
+  revision = "7dec05603e063fb88a9e0b2aa404ae840b9e911c"
+
+[[projects]]
+  branch = "master"
   name = "github.com/goxjs/websocket"
   packages = ["."]
   revision = "ac3da9cf08359580a3d46479e178f136c8f594d1"
@@ -70,9 +82,15 @@
   packages = ["websocket"]
   revision = "b68f30494add4df6bd8ef5e82803f308e7f7c59c"
 
+[[projects]]
+  branch = "master"
+  name = "honnef.co/go/js/dom"
+  packages = ["."]
+  revision = "6da835bec70f84cd4f0c0b8a7239a9260b6bc37f"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "17ace622b1455508df3d3830df228446e60812cc734679ef806c46bb9bd9935d"
+  inputs-digest = "28b02a4c7458e49a743926c26dad5db2cf68b67b234360b0fcaf96426692b54c"
   solver-name = "gps-cdcl"
   solver-version = 1
