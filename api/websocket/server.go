@@ -1,15 +1,15 @@
-package api
+package websocket
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/websocket"
+	wsocket "github.com/gorilla/websocket"
 	"github.com/relnod/evo"
 	"github.com/relnod/evo/world"
 )
 
-var upgrader = websocket.Upgrader{
+var upgrader = wsocket.Upgrader{
 	ReadBufferSize:    4096,
 	WriteBufferSize:   4096,
 	EnableCompression: true,
@@ -18,27 +18,27 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// WebsocketServer implements the internal cient interface.
-type WebsocketServer struct {
+// Server implements the internal cient interface.
+type Server struct {
 	server evo.Server
 	addr   string
 }
 
-// NewWebsocketServer returns a new websocket server.
-func NewWebsocketServer(server evo.Server, addr string) *WebsocketServer {
-	return &WebsocketServer{
+// NewServer returns a new websocket server.
+func NewServer(server evo.Server, addr string) *Server {
+	return &Server{
 		server: server,
 		addr:   addr,
 	}
 }
 
 // Init initializes the websocket server.
-func (c *WebsocketServer) Init() {
+func (c *Server) Init() {
 	http.HandleFunc("/", c.handleConnection)
 }
 
 // Start starts the server.
-func (c *WebsocketServer) Start() {
+func (c *Server) Start() {
 	go c.server.Start()
 
 	err := http.ListenAndServe(c.addr, nil)
@@ -49,7 +49,7 @@ func (c *WebsocketServer) Start() {
 }
 
 // handleConnection handles a websocket connection.
-func (c *WebsocketServer) handleConnection(w http.ResponseWriter, r *http.Request) {
+func (c *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Connecting to Client")
 	defer func() { log.Println("Disconnecting Client") }()

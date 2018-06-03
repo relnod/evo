@@ -1,4 +1,4 @@
-package api
+package websocket
 
 import (
 	"encoding/json"
@@ -6,16 +6,16 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/goxjs/websocket"
+	wsocket "github.com/goxjs/websocket"
 
 	"github.com/relnod/evo"
 	"github.com/relnod/evo/world"
 	uuid "github.com/satori/go.uuid"
 )
 
-// WebsocketClient implements the internal server interface with a websocket
+// Client implements the internal server interface with a websocket
 // connection.
-type WebsocketClient struct {
+type Client struct {
 	conn    net.Conn
 	decoder *json.Decoder
 
@@ -23,16 +23,16 @@ type WebsocketClient struct {
 	streams map[uuid.UUID]evo.Stream
 }
 
-// NewWebsocketClient returns a new websocket client with a given address.
-func NewWebsocketClient(addr string) *WebsocketClient {
+// NewClient returns a new websocket client with a given address.
+func NewClient(addr string) *Client {
 	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
 
-	conn, err := websocket.Dial(u.String(), addr)
+	conn, err := wsocket.Dial(u.String(), addr)
 	if err != nil {
 		log.Fatal("Failed to create connection: ", err)
 	}
 
-	return &WebsocketClient{
+	return &Client{
 		conn:    conn,
 		decoder: json.NewDecoder(conn),
 
@@ -41,7 +41,7 @@ func NewWebsocketClient(addr string) *WebsocketClient {
 }
 
 // Start starts the client.
-func (c *WebsocketClient) Start() {
+func (c *Client) Start() {
 	for {
 		// TODO: make it more generic.
 		w := c.GetWorld()
@@ -53,7 +53,7 @@ func (c *WebsocketClient) Start() {
 
 // GetWorld returns retrieves the next world object from the server.
 // Blocks until next world is recieved!
-func (c *WebsocketClient) GetWorld() *world.World {
+func (c *Client) GetWorld() *world.World {
 	w := world.World{}
 	err := c.decoder.Decode(&w)
 	if err != nil {
@@ -65,7 +65,7 @@ func (c *WebsocketClient) GetWorld() *world.World {
 
 // RegisterStream registers a stream via the websocket connection.
 // TODO: actually register the stream.
-func (c *WebsocketClient) RegisterStream(stream evo.Stream) uuid.UUID {
+func (c *Client) RegisterStream(stream evo.Stream) uuid.UUID {
 	u := uuid.NewV4()
 	c.streams[u] = stream
 
@@ -73,6 +73,6 @@ func (c *WebsocketClient) RegisterStream(stream evo.Stream) uuid.UUID {
 }
 
 // UnRegisterStream un registers a stream.
-func (c *WebsocketClient) UnRegisterStream(id uuid.UUID) {
+func (c *Client) UnRegisterStream(id uuid.UUID) {
 	delete(c.streams, id)
 }
