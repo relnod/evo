@@ -11,9 +11,7 @@ services:
     volumes: 
         - ./out/static:/usr/share/nginx/html
   watcher:
-    build:
-        context: './'
-        dockerfile: './build/dev/Dockerfile'
+    image: relnod/evo-dev:latest
     volumes: 
         - ./:/go/src/github.com/relnod/evo/
     ports: 

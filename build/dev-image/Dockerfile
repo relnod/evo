@@ -1,4 +1,4 @@
-FROM golang:1.10
+FROM relnod/evo-base:latest
 
 COPY ./ /go/src/github.com/relnod/evo
 WORKDIR /go/src/github.com/relnod/evo
