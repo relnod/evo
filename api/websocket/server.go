@@ -1,11 +1,13 @@
 package websocket
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	wsocket "github.com/gorilla/websocket"
 	"github.com/relnod/evo"
+	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/world"
 )
 
@@ -62,7 +64,14 @@ func (c *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	id := c.server.RegisterStream(func(w *world.World) {
-		conn.WriteJSON(w)
+		msg, err := json.Marshal(w)
+		if err != nil {
+			// TODO: maybe improve error handling
+			log.Printf("Failed to unmarshal world object (%s)", err)
+			return
+		}
+		event := &api.Event{Type: api.World, Message: msg}
+		conn.WriteJSON(event)
 	})
 	defer c.server.UnRegisterStream(id)
 

@@ -9,6 +9,7 @@ import (
 	wsocket "github.com/goxjs/websocket"
 
 	"github.com/relnod/evo"
+	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/world"
 	uuid "github.com/satori/go.uuid"
 )
@@ -54,10 +55,21 @@ func (c *Client) Start() {
 // GetWorld returns retrieves the next world object from the server.
 // Blocks until next world is recieved!
 func (c *Client) GetWorld() *world.World {
-	w := world.World{}
-	err := c.decoder.Decode(&w)
+	event := api.Event{}
+	err := c.decoder.Decode(&event)
 	if err != nil {
 		log.Fatal("Failed to read:", err)
+	}
+
+	if event.Type != api.World {
+		// TODO: actually make a request and wait for response.
+		return nil
+	}
+
+	w := world.World{}
+	err = json.Unmarshal(event.Message, &w)
+	if err != nil {
+		log.Printf("Failed to decode world (%s)", err)
 	}
 
 	return &w
