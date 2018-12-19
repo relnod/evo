@@ -6,8 +6,10 @@ import (
 	"github.com/relnod/evo/pkg/world"
 )
 
+// WorldStream defines a function that updates the world model.
 type WorldStream func(*world.World)
 
+// Producer produces data.
 type Producer interface {
 	Start() error
 	GetWorld() (*world.World, error)
@@ -15,6 +17,7 @@ type Producer interface {
 	UnsubscribeWorld(id uuid.UUID)
 }
 
+// Consumer consumes data
 type Consumer interface {
 	Init()
 	Start() error

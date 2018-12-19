@@ -1,9 +1,9 @@
 package system
 
 import (
-	"github.com/relnod/evo/pkg/collision"
 	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/math32"
+	"github.com/relnod/evo/pkg/math32/collision"
 	"github.com/relnod/evo/pkg/world"
 )
 

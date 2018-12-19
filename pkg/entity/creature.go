@@ -4,23 +4,30 @@ import (
 	"math/rand"
 
 	deep "github.com/patrikeh/go-deep"
+
 	"github.com/relnod/evo/pkg/config"
 	"github.com/relnod/evo/pkg/math32"
 )
 
+// State defines the state of a creature.
 type State int
 
+// Defines all creature states.
 const (
 	StateChild State = iota
 	StateAdult
 	StateBreading
 )
 
+// Creature can either be moving (animal) or stand still (plant).
 type Creature struct {
-	Pos    math32.Vec2 `json:"pos"`
+	// Current position in the world.
+	Pos math32.Vec2 `json:"pos"`
+
+	// The direction the creature is facing
+	Dir    math32.Vec2 `json:"-"`
 	Radius float32     `json:"radius"`
 	Speed  float32     `json:"speed"`
-	Dir    math32.Vec2 `json:"-"`
 
 	Eye   *Eye         `json:"-"`
 	Brain *deep.Neural `json:"-"`
@@ -247,15 +254,19 @@ func (e *Creature) Collide(e2 *Creature) {
 	}
 }
 
+// IsSameSpecies returns true if the difference between the radius of both
+// creatures is less than 10%.
 func (e *Creature) IsSameSpecies(e2 *Creature) bool {
 	diff := e.Radius / e2.Radius
 	return diff > 0.9 && diff < 1.1
 }
 
+// IsAlive returns true if the creature is alive.
 func (e *Creature) IsAlive() bool {
 	return e.Alive
 }
 
+// Die lets the creature die.
 func (e *Creature) Die() {
 	e.Alive = false
 }

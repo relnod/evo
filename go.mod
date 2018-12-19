@@ -1,7 +1,7 @@
 module github.com/relnod/evo
 
 require (
-	github.com/davecgh/go-spew v1.1.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-gl/gl v0.0.0-20181026044259-55b76b7df9d2 // indirect
 	github.com/go-gl/glfw v0.0.0-20181213070059-819e8ce5125f // indirect
 	github.com/google/uuid v1.1.0
