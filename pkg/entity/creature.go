@@ -5,7 +5,7 @@ import (
 
 	deep "github.com/patrikeh/go-deep"
 	"github.com/relnod/evo/pkg/config"
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 )
 
 type State int
@@ -17,10 +17,10 @@ const (
 )
 
 type Creature struct {
-	Pos    num.Vec2 `json:"pos"`
-	Radius float32  `json:"radius"`
-	Speed  float32  `json:"speed"`
-	Dir    num.Vec2 `json:"-"`
+	Pos    math32.Vec2 `json:"pos"`
+	Radius float32     `json:"radius"`
+	Speed  float32     `json:"speed"`
+	Dir    math32.Vec2 `json:"-"`
 
 	Eye   *Eye         `json:"-"`
 	Brain *deep.Neural `json:"-"`
@@ -41,7 +41,7 @@ type Constants struct {
 	LifeExpectancy    float32
 }
 
-func NewCreature(pos num.Vec2, radius float32) *Creature {
+func NewCreature(pos math32.Vec2, radius float32) *Creature {
 	return newCreature(pos, radius, newBrain(), 0, nil)
 }
 
@@ -58,7 +58,7 @@ func (e *Creature) GetChild() *Creature {
 	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1, e.Eye)
 }
 
-func newCreature(pos num.Vec2, radius float32, brain *deep.Neural, generation int, eye *Eye) *Creature {
+func newCreature(pos math32.Vec2, radius float32, brain *deep.Neural, generation int, eye *Eye) *Creature {
 	var speed float32
 	energyConsumption := rand.Float32() / 120
 	energy := radius
@@ -147,8 +147,8 @@ func mutate64(val float64, fac float64, chance float64) float64 {
 	return val * (1.0 + (rand.Float64()-0.5)*fac)
 }
 
-func randomDir() num.Vec2 {
-	d := num.Vec2{
+func randomDir() math32.Vec2 {
+	d := math32.Vec2{
 		X: float32(rand.Float32()*2 - 1),
 		Y: float32(rand.Float32()*2 - 1),
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/goxjs/gl"
 	"golang.org/x/mobile/exp/f32"
 
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 	"github.com/relnod/evo/pkg/world"
 )
 
@@ -34,9 +34,9 @@ void main() {
 `
 
 type RenderType struct {
-	VB       gl.Buffer
-	ItemSize int
-	NumItems int
+	VB          gl.Buffer
+	ItemSize    int
+	math32Items int
 }
 
 type WorldRenderer struct {
@@ -138,13 +138,13 @@ func (r WorldRenderer) UpdateViewport(zoom, x, y float32) {
 	if dw > dh {
 		d = dh
 	}
-	mScale := num.NewMat4(
+	mScale := math32.NewMat4(
 		d*2.0/r.width*zoom, 0, 0, -x,
 		0, -d*2.0/r.height*zoom, 0, y,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
-	mTranslation := num.NewMat4(
+	mTranslation := math32.NewMat4(
 		1, 0, 0, -1,
 		0, 1, 0, 1,
 		0, 0, 1, 0,
@@ -175,9 +175,9 @@ func (r *WorldRenderer) initCircleType() {
 	// gl.BindBuffer(gl.ARRAY_BUFFER, nil)
 
 	itemSize := 2
-	numItems := len(vertices) / itemSize
+	math32Items := len(vertices) / itemSize
 
-	r.circle = RenderType{VB: vbuffer, ItemSize: itemSize, NumItems: numItems}
+	r.circle = RenderType{VB: vbuffer, ItemSize: itemSize, math32Items: math32Items}
 }
 
 func (r *WorldRenderer) Clear() {
@@ -194,13 +194,13 @@ func (r *WorldRenderer) DrawCircle(x, y, radius float32) {
 	gl.EnableVertexAttribArray(r.aVertexPosition)
 	gl.VertexAttribPointer(r.aVertexPosition, r.circle.ItemSize, gl.FLOAT, false, 0, 0)
 
-	mScale := num.NewMat4(
+	mScale := math32.NewMat4(
 		radius, 0, 0, 0,
 		0, radius, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
-	mTranslation := num.NewMat4(
+	mTranslation := math32.NewMat4(
 		1, 0, 0, x,
 		0, 1, 0, y,
 		0, 0, 1, 0,
@@ -208,5 +208,5 @@ func (r *WorldRenderer) DrawCircle(x, y, radius float32) {
 	)
 	gl.UniformMatrix4fv(r.mModel, mTranslation.Mult(mScale).Transpose().Data)
 
-	gl.DrawArrays(gl.TRIANGLE_FAN, 0, r.circle.NumItems)
+	gl.DrawArrays(gl.TRIANGLE_FAN, 0, r.circle.math32Items)
 }

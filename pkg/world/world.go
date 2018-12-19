@@ -3,7 +3,7 @@ package world
 import (
 	"github.com/relnod/evo/pkg/collision"
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 )
 
 // EdgeMode defines how the edge of the world is defined.
@@ -40,7 +40,7 @@ type World struct {
 	Dynamic []*entity.Creature `json:"-"`
 
 	Cells       []*Cell `json:"-"`
-	numCells    int
+	math32Cells int
 	cellsPerRow int
 	cellWidth   float32
 	cellHeight  float32
@@ -48,12 +48,12 @@ type World struct {
 
 // NewWorld returns a new world.
 func NewWorld(width, height float32, edgeMode EdgeMode, startMode StartMode) *World {
-	numCells := 36
+	math32Cells := 36
 	cellsPerRow := 6
 
-	numEntities := 1
+	math32Entities := 1
 	if startMode == StartModeRandom {
-		numEntities = 1000
+		math32Entities = 1000
 	}
 
 	w := &World{
@@ -63,16 +63,16 @@ func NewWorld(width, height float32, edgeMode EdgeMode, startMode StartMode) *Wo
 		EdgeMode:  edgeMode,
 		StartMode: startMode,
 
-		Creatures: make([]*entity.Creature, numEntities),
+		Creatures: make([]*entity.Creature, math32Entities),
 
 		Static:  make([]*entity.Creature, 1),
 		Dynamic: make([]*entity.Creature, 1),
 
-		Cells:       make([]*Cell, numCells),
-		numCells:    numCells,
+		Cells:       make([]*Cell, math32Cells),
+		math32Cells: math32Cells,
 		cellsPerRow: cellsPerRow,
-		cellWidth:   width / float32(numCells/cellsPerRow),
-		cellHeight:  height / float32(numCells/cellsPerRow),
+		cellWidth:   width / float32(math32Cells/cellsPerRow),
+		cellHeight:  height / float32(math32Cells/cellsPerRow),
 	}
 
 	w.createCells()
@@ -81,16 +81,16 @@ func NewWorld(width, height float32, edgeMode EdgeMode, startMode StartMode) *Wo
 }
 
 func (w *World) createCells() {
-	radius := (&num.Vec2{X: w.cellWidth, Y: w.cellHeight}).Len()
+	radius := (&math32.Vec2{X: w.cellWidth, Y: w.cellHeight}).Len()
 
 	for row := 0; row < w.cellsPerRow; row++ {
 		for col := 0; col < w.cellsPerRow; col++ {
 			w.Cells[row*w.cellsPerRow+col] = &Cell{
-				TopLeft: num.Vec2{
+				TopLeft: math32.Vec2{
 					X: w.cellWidth * float32(row),
 					Y: w.cellHeight * float32(col),
 				},
-				BotRight: num.Vec2{
+				BotRight: math32.Vec2{
 					X: w.cellWidth * float32(row+1),
 					Y: w.cellHeight * float32(col+1),
 				},
@@ -99,7 +99,7 @@ func (w *World) createCells() {
 				Dynamic: make([]*entity.Creature, 0),
 			}
 
-			w.Cells[row*w.cellsPerRow+col].Center = num.Vec2{
+			w.Cells[row*w.cellsPerRow+col].Center = math32.Vec2{
 				X: w.Cells[row*w.cellsPerRow+col].TopLeft.X + w.cellWidth/2.0,
 				Y: w.Cells[row*w.cellsPerRow+col].TopLeft.Y + w.cellHeight/2.0,
 			}
@@ -129,7 +129,7 @@ func (w *World) UpdateCells() {
 }
 
 // FindCell returns the cell for the given position.
-func (w *World) FindCell(pos *num.Vec2) *Cell {
+func (w *World) FindCell(pos *math32.Vec2) *Cell {
 	x := pos.X / w.cellWidth
 	y := pos.Y / w.cellHeight
 

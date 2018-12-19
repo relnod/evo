@@ -3,11 +3,11 @@ package entity
 import (
 	"math"
 
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 )
 
 type Eye struct {
-	Dir   num.Vec2
+	Dir   math32.Vec2
 	Range float32
 	FOV   float32
 
@@ -17,7 +17,7 @@ type Eye struct {
 
 func NewEye(eyeRange float32) *Eye {
 	return &Eye{
-		Dir:   num.Vec2{},
+		Dir:   math32.Vec2{},
 		Range: eyeRange,
 		FOV:   (80 / eyeRange * 40) * math.Pi / 180.0,
 	}

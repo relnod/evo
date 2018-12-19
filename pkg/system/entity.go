@@ -5,7 +5,7 @@ import (
 
 	"github.com/relnod/evo/pkg/collision"
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 	"github.com/relnod/evo/pkg/world"
 )
 
@@ -53,8 +53,8 @@ func (s *Entity) Update() {
 	}
 }
 
-func (s *Entity) randomPosition(radius float32) num.Vec2 {
-	pos := num.Vec2{
+func (s *Entity) randomPosition(radius float32) math32.Vec2 {
+	pos := math32.Vec2{
 		X: rand.Float32()*(s.world.Width-(2*radius)) + radius,
 		Y: rand.Float32()*(s.world.Height-(2*radius)) + radius,
 	}

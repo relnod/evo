@@ -2,15 +2,15 @@ package world
 
 import (
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 )
 
 // Cell holds all entitties in a cell.
 type Cell struct {
-	TopLeft  num.Vec2
-	BotRight num.Vec2
+	TopLeft  math32.Vec2
+	BotRight math32.Vec2
 
-	Center num.Vec2
+	Center math32.Vec2
 	Radius float32
 
 	Static  []*entity.Creature

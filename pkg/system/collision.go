@@ -3,7 +3,7 @@ package system
 import (
 	"github.com/relnod/evo/pkg/collision"
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/num"
+	"github.com/relnod/evo/pkg/math32"
 	"github.com/relnod/evo/pkg/world"
 )
 
@@ -50,12 +50,12 @@ func (s *Collision) CreatureEyeCreature() {
 			}
 
 			for _, dynamic := range cell.Dynamic {
-				d := num.Vec2{X: dynamic.Pos.X - creature.Pos.X, Y: dynamic.Pos.Y - creature.Pos.Y}
+				d := math32.Vec2{X: dynamic.Pos.X - creature.Pos.X, Y: dynamic.Pos.Y - creature.Pos.Y}
 				if d.Len() > 50 {
 					continue
 				}
 
-				if num.Angle(&d, &creature.Dir) > creature.Eye.FOV {
+				if math32.Angle(&d, &creature.Dir) > creature.Eye.FOV {
 					continue
 				}
 
@@ -63,12 +63,12 @@ func (s *Collision) CreatureEyeCreature() {
 			}
 
 			for _, static := range cell.Static {
-				d := num.Vec2{X: static.Pos.X - creature.Pos.X, Y: static.Pos.Y - creature.Pos.Y}
+				d := math32.Vec2{X: static.Pos.X - creature.Pos.X, Y: static.Pos.Y - creature.Pos.Y}
 				if d.Len() > 50 {
 					continue
 				}
 
-				if num.Angle(&d, &creature.Dir) > creature.Eye.FOV {
+				if math32.Angle(&d, &creature.Dir) > creature.Eye.FOV {
 					continue
 				}
 
@@ -109,7 +109,7 @@ func (s *Collision) handleCreatureEdgeCollision(e *entity.Creature, border int) 
 	}
 }
 
-func (s *Collision) FindCreature(pos *num.Vec2) *entity.Creature {
+func (s *Collision) FindCreature(pos *math32.Vec2) *entity.Creature {
 	cell := s.world.FindCell(pos)
 
 	if cell == nil {
