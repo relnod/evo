@@ -62,8 +62,9 @@ type WorldRenderer struct {
 
 func NewWorldRenderer(width, height float32) *WorldRenderer {
 	return &WorldRenderer{
-		width:          width,
-		height:         height,
+		width:  width,
+		height: height,
+
 		viewportWidth:  width,
 		viewportHeight: height,
 	}
@@ -117,25 +118,6 @@ func (r *WorldRenderer) Init() {
 
 	gl.UseProgram(program)
 
-	dw := r.width / r.viewportWidth
-	dh := r.height / r.viewportHeight
-	d := dw
-	if dw > dh {
-		d = dh
-	}
-	mScale := num.NewMat4(
-		d*2.0/r.width, 0, 0, 0,
-		0, -d*2.0/r.height, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	)
-	mTranslation := num.NewMat4(
-		1, 0, 0, -1,
-		0, 1, 0, 1,
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	)
-
 	r.program = program
 	r.aspect = r.width / r.height
 	r.aVertexPosition = gl.GetAttribLocation(program, "aVertexPosition")
@@ -146,9 +128,30 @@ func (r *WorldRenderer) Init() {
 	// gl.Get
 	// gl.Setprogram.Set("uColor", r.uColor)
 
-	gl.UniformMatrix4fv(r.mWorld, mTranslation.Mult(mScale).Transpose().Data)
-
 	r.initCircleType()
+}
+
+func (r WorldRenderer) UpdateViewport(zoom, x, y float32) {
+	dw := r.width / r.viewportWidth
+	dh := r.height / r.viewportHeight
+	d := dw
+	if dw > dh {
+		d = dh
+	}
+	mScale := num.NewMat4(
+		d*2.0/r.width*zoom, 0, 0, -x,
+		0, -d*2.0/r.height*zoom, 0, y,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	)
+	mTranslation := num.NewMat4(
+		1, 0, 0, -1,
+		0, 1, 0, 1,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	)
+
+	gl.UniformMatrix4fv(r.mWorld, mTranslation.Mult(mScale).Transpose().Data)
 }
 
 func (r *WorldRenderer) initCircleType() {

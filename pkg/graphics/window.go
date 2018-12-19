@@ -6,6 +6,7 @@ import (
 )
 
 type resizeCallback func(width, height int)
+type keyCallback func(key glfw.Key)
 
 // Window wrappes a glfw.Window
 type Window struct {
@@ -15,6 +16,7 @@ type Window struct {
 	height int
 
 	resizeCallback resizeCallback
+	keyCallback    keyCallback
 }
 
 // NewWindow creates a new window
@@ -42,6 +44,15 @@ func (w *Window) Init() {
 	}
 
 	glfw.SwapInterval(0)
+	window.SetKeyCallback(func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if action != glfw.Press && action != glfw.Repeat {
+			return
+		}
+
+		if w.keyCallback != nil {
+			w.keyCallback(key)
+		}
+	})
 
 	w.Window = window
 }
@@ -54,4 +65,8 @@ func (w *Window) Update() {
 
 func (w *Window) OnResize(cb resizeCallback) {
 	w.resizeCallback = cb
+}
+
+func (w *Window) OnKey(cb keyCallback) {
+	w.keyCallback = cb
 }

@@ -3,9 +3,14 @@ package graphics
 import (
 	"log"
 
+	"github.com/goxjs/glfw"
 	"github.com/relnod/evo/pkg/evo"
 	"github.com/relnod/evo/pkg/world"
 )
+
+type Renderer interface {
+	UpdateViewport(zoom, x, y float32)
+}
 
 // Client implements evo.Consumer
 type Client struct {
@@ -27,12 +32,30 @@ func (c *Client) Init() {
 
 	window := NewWindow(int(w.Width), int(w.Height))
 	renderer := NewWorldRenderer(w.Width, w.Height)
+	camera := NewCamera(renderer)
 	window.OnResize(func(width, height int) {
 		renderer.SetSize(width, height)
+	})
+	window.OnKey(func(key glfw.Key) {
+		switch key {
+		case glfw.KeyKPAdd:
+			camera.ZoomIn()
+		case glfw.KeyKPSubtract:
+			camera.ZoomOut()
+		case glfw.KeyDown:
+			camera.MoveDown()
+		case glfw.KeyUp:
+			camera.MoveUp()
+		case glfw.KeyLeft:
+			camera.MoveLeft()
+		case glfw.KeyRight:
+			camera.MoveRight()
+		}
 	})
 
 	window.Init()
 	renderer.Init()
+	camera.Update()
 	window.Update()
 
 	c.producer.SubscribeWorld(func(w *world.World) {
