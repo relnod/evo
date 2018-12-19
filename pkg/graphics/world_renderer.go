@@ -39,9 +39,12 @@ type RenderType struct {
 	NumItems int
 }
 
-type Render struct {
+type WorldRenderer struct {
 	width  float32
 	height float32
+
+	viewportWidth  float32
+	viewportHeight float32
 
 	canvas *js.Object
 
@@ -57,11 +60,16 @@ type Render struct {
 	circle RenderType
 }
 
-func NewRender(width, height float32) *Render {
-	return &Render{width: width, height: height}
+func NewWorldRenderer(width, height float32) *WorldRenderer {
+	return &WorldRenderer{
+		width:          width,
+		height:         height,
+		viewportWidth:  width,
+		viewportHeight: height,
+	}
 }
 
-func (r *Render) UpdateWorld(w *world.World) {
+func (r *WorldRenderer) Update(w *world.World) {
 	r.Clear()
 
 	for _, c := range w.Creatures {
@@ -78,8 +86,13 @@ func (r *Render) UpdateWorld(w *world.World) {
 	}
 }
 
-func (r *Render) Init() {
-	gl.Viewport(0, 0, int(r.width), int(r.height))
+func (r *WorldRenderer) SetSize(width, height int) {
+	gl.Viewport(0, 0, width, height)
+	r.width = float32(width)
+	r.height = float32(height)
+}
+
+func (r *WorldRenderer) Init() {
 	gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 
@@ -104,9 +117,15 @@ func (r *Render) Init() {
 
 	gl.UseProgram(program)
 
+	dw := r.width / r.viewportWidth
+	dh := r.height / r.viewportHeight
+	d := dw
+	if dw > dh {
+		d = dh
+	}
 	mScale := num.NewMat4(
-		2.0/r.width, 0, 0, 0,
-		0, -2.0/r.height, 0, 0,
+		d*2.0/r.width, 0, 0, 0,
+		0, -d*2.0/r.height, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
@@ -132,7 +151,7 @@ func (r *Render) Init() {
 	r.initCircleType()
 }
 
-func (r *Render) initCircleType() {
+func (r *WorldRenderer) initCircleType() {
 	vertices := make([]float32, 400)
 	vertices[0] = 0
 	vertices[1] = 0
@@ -158,18 +177,15 @@ func (r *Render) initCircleType() {
 	r.circle = RenderType{VB: vbuffer, ItemSize: itemSize, NumItems: numItems}
 }
 
-func (r *Render) Clear() {
+func (r *WorldRenderer) Clear() {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 }
 
-func (Render *Render) SetColor(r, g, b, a float32) {
-	gl.Uniform4f(Render.uColor, r, g, b, a)
+func (w *WorldRenderer) SetColor(r, g, b, a float32) {
+	gl.Uniform4f(w.uColor, r, g, b, a)
 }
 
-func (r *Render) DrawCircle(x, y, radius float32) {
-	// log.Println(x, y, radius)
-	// program := r.program
-
+func (r *WorldRenderer) DrawCircle(x, y, radius float32) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.circle.VB)
 
 	gl.EnableVertexAttribArray(r.aVertexPosition)
@@ -190,5 +206,4 @@ func (r *Render) DrawCircle(x, y, radius float32) {
 	gl.UniformMatrix4fv(r.mModel, mTranslation.Mult(mScale).Transpose().Data)
 
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, r.circle.NumItems)
-	// gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 }

@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -85,7 +84,6 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Println("here")
 			switch subscription.Type {
 			case api.SubscriptionWorld:
 				id := s.producer.SubscribeWorld(func(w *world.World) {

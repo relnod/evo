@@ -5,12 +5,16 @@ import (
 	"github.com/goxjs/glfw"
 )
 
+type resizeCallback func(width, height int)
+
 // Window wrappes a glfw.Window
 type Window struct {
 	Window *glfw.Window
 
 	width  int
 	height int
+
+	resizeCallback resizeCallback
 }
 
 // NewWindow creates a new window
@@ -32,6 +36,11 @@ func (w *Window) Init() {
 		panic(err)
 	}
 	window.MakeContextCurrent()
+	width, height := window.GetSize()
+	if w.resizeCallback != nil {
+		w.resizeCallback(width, height)
+	}
+
 	glfw.SwapInterval(0)
 
 	w.Window = window
@@ -41,4 +50,8 @@ func (w *Window) Init() {
 func (w *Window) Update() {
 	w.Window.SwapBuffers()
 	glfw.PollEvents()
+}
+
+func (w *Window) OnResize(cb resizeCallback) {
+	w.resizeCallback = cb
 }

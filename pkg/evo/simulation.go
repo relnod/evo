@@ -28,8 +28,8 @@ func NewSimulation() *Simulation {
 	log.Println("Seed: ", seed)
 
 	world := world.NewWorld(
-		500.0, // @todo
-		500.0, // @todo
+		1000.0, // @todo
+		1000.0, // @todo
 		world.EdgeModeLoop,
 		world.StartModeRandom,
 	)

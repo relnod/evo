@@ -10,7 +10,6 @@ import (
 // Client implements evo.Consumer
 type Client struct {
 	producer evo.Producer
-	renderer Render
 }
 
 // NewClient returns a new render client.
@@ -27,7 +26,10 @@ func (c *Client) Init() {
 	}
 
 	window := NewWindow(int(w.Width), int(w.Height))
-	renderer := NewRender(w.Width, w.Height)
+	renderer := NewWorldRenderer(w.Width, w.Height)
+	window.OnResize(func(width, height int) {
+		renderer.SetSize(width, height)
+	})
 
 	window.Init()
 	renderer.Init()
@@ -35,7 +37,7 @@ func (c *Client) Init() {
 
 	c.producer.SubscribeWorld(func(w *world.World) {
 		window.Update()
-		renderer.UpdateWorld(w)
+		renderer.Update(w)
 	})
 }
 
