@@ -2,9 +2,11 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	wsocket "github.com/gorilla/websocket"
 
 	"github.com/relnod/evo/api"
@@ -25,6 +27,8 @@ var upgrader = wsocket.Upgrader{
 type Server struct {
 	producer evo.Producer
 	addr     string
+
+	subscriptions map[uuid.UUID]api.Subscription
 }
 
 // NewServer returns a new websocket server.
@@ -63,23 +67,39 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	id := s.producer.SubscribeWorld(func(w *world.World) {
-		msg, err := json.Marshal(w)
-		if err != nil {
-			// TODO: maybe improve error handling
-			log.Printf("Failed to unmarshal world object (%s)", err)
-			return
-		}
-		event := &api.Event{Type: api.World, Message: msg}
-		conn.WriteJSON(event)
-	})
-	defer s.producer.UnsubscribeWorld(id)
-
 	for {
-		_, _, err := conn.ReadMessage()
+		_, data, err := conn.ReadMessage()
 		if err != nil {
 			// Disconnect
 			break
+		}
+		var event api.Event
+		err = json.Unmarshal(data, &event)
+		if err != nil {
+			log.Fatal(err)
+		}
+		switch event.Type {
+		case api.EventSubscription:
+			var subscription api.Subscription
+			err = json.Unmarshal(event.Message, &subscription)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("here")
+			switch subscription.Type {
+			case api.SubscriptionWorld:
+				id := s.producer.SubscribeWorld(func(w *world.World) {
+					msg, err := json.Marshal(w)
+					if err != nil {
+						// TODO: maybe improve error handling
+						log.Printf("Failed to unmarshal world object (%s)", err)
+						return
+					}
+					event := &api.Event{Type: api.EventWorld, Message: msg}
+					conn.WriteJSON(event)
+				})
+				defer s.producer.UnsubscribeWorld(id)
+			}
 		}
 	}
 }

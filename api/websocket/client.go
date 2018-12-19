@@ -53,7 +53,7 @@ func (c *Client) Start() error {
 		}
 
 		switch event.Type {
-		case api.World:
+		case api.EventWorld:
 			w := world.World{}
 			err = json.Unmarshal(event.Message, &w)
 			if err != nil {
@@ -93,7 +93,31 @@ func (c *Client) SubscribeWorld(stream evo.WorldStream) uuid.UUID {
 	u := uuid.New()
 	c.worldSubscriptions[u] = stream
 
+	err := c.sedMessage(api.EventSubscription, api.Subscription{
+		Type: api.SubscriptionWorld,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return u
+}
+
+func (c *Client) sedMessage(t api.EventType, message interface{}) error {
+	m, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	event := api.Event{
+		Type:    t,
+		Message: m,
+	}
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	c.conn.Write(data)
+	return nil
 }
 
 // UnRegisterStream un registers a stream.
