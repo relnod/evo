@@ -7,9 +7,9 @@ import (
 )
 
 type Eye struct {
-	Dir   math32.Vec2
-	Range float32
-	FOV   float32
+	Dir   math32.Vec2 `json:"dir"`
+	Range float32     `json:"range"`
+	FOV   float32     `json:"fov"`
 
 	Count   int
 	Biggest float32

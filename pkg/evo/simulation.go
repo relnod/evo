@@ -28,8 +28,8 @@ func NewSimulation() *Simulation {
 	log.Println("Seed: ", seed)
 
 	world := world.NewWorld(
-		1000.0, // @todo
-		1000.0, // @todo
+		2000.0, // @todo
+		2000.0, // @todo
 		world.EdgeModeLoop,
 		world.StartModeRandom,
 	)
@@ -40,7 +40,7 @@ func NewSimulation() *Simulation {
 	entitySystem.Init()
 
 	return &Simulation{
-		ticksPerSecond:  60,
+		ticksPerSecond:  120,
 		world:           world,
 		collisionSystem: collisionSystem,
 		entitySystem:    entitySystem,

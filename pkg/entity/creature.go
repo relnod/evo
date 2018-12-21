@@ -29,7 +29,7 @@ type Creature struct {
 	Radius float32     `json:"radius"`
 	Speed  float32     `json:"speed"`
 
-	Eye   *Eye         `json:"-"`
+	Eye   *Eye         `json:"eye"`
 	Brain *deep.Neural `json:"-"`
 
 	Alive     bool    `json:"-"`

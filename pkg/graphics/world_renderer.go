@@ -80,6 +80,11 @@ func (r *WorldRenderer) Update(w *world.World) {
 			r.SetColor(1/(c.Radius-4.0), 0.0, 0.0, 1.0)
 		}
 		r.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
+
+		if c.Eye != nil {
+			r.SetColor(1, 1.0, 0.0, 1.0)
+			r.DrawPartialCircle(c.Pos.X, c.Pos.Y, c.Eye.Range, c.Eye.FOV, math32.Angle(&math32.Vec2{0.0000001, 0.0000001}, &c.Eye.Dir))
+		}
 	}
 
 	if gl.GetError() != gl.NO_ERROR {
@@ -155,17 +160,13 @@ func (r WorldRenderer) UpdateViewport(zoom, x, y float32) {
 }
 
 func (r *WorldRenderer) initCircleType() {
-	vertices := make([]float32, 400)
-	vertices[0] = 0
-	vertices[1] = 0
+	numVertices := 40
+	vertices := make([]float32, numVertices*2)
 
-	resolution := 2 * math.Pi / float64(len(vertices)/2-2)
-	s := 0.0
-	for i := 2; i < len(vertices); i += 2 {
-		vertices[i] = float32(math.Cos(s))
-		vertices[i+1] = float32(math.Sin(s))
-
-		s += resolution
+	for i := 0; i < len(vertices); i += 2 {
+		theta := 2.0 * math.Pi * (float64(i) / 2.0) / float64(numVertices)
+		vertices[i] = float32(math.Cos(theta))
+		vertices[i+1] = float32(math.Sin(theta))
 	}
 
 	vbuffer := gl.CreateBuffer()
@@ -209,4 +210,39 @@ func (r *WorldRenderer) DrawCircle(x, y, radius float32) {
 	gl.UniformMatrix4fv(r.mModel, mTranslation.Mult(mScale).Transpose().Data)
 
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, r.circle.math32Items)
+}
+
+func (r *WorldRenderer) DrawPartialCircle(x, y, radius, fov, angle float32) {
+	gl.BindBuffer(gl.ARRAY_BUFFER, r.circle.VB)
+
+	gl.EnableVertexAttribArray(r.aVertexPosition)
+	gl.VertexAttribPointer(r.aVertexPosition, r.circle.ItemSize, gl.FLOAT, false, 0, 0)
+
+	mScale := math32.NewMat4(
+		radius, 0, 0, 0,
+		0, radius, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	)
+	mTranslation := math32.NewMat4(
+		1, 0, 0, x,
+		0, 1, 0, y,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	)
+	mRotation := math32.NewMat4(
+		1, 0, 0, 1,
+		0, 2, -2, 1,
+		0, 2, -2, 0,
+		0, 0, 0, 1,
+	)
+	// mRotation := math32.NewMat4(
+	// 	1, 0, 0, 1,
+	// 	0, angle, -1.0*angle, 1,
+	// 	0, float32(math.Sin(angle64)), -float32(math.Cos(angle64)), 0,
+	// 	0, 0, 0, 1,
+	// )
+	gl.UniformMatrix4fv(r.mModel, mTranslation.Mult(mScale).Mult(mRotation).Transpose().Data)
+
+	gl.DrawArrays(gl.TRIANGLE_FAN, 0, int(float32(r.circle.math32Items)*fov/(2.0*math.Pi)))
 }
