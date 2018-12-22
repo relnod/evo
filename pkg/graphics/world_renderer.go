@@ -81,10 +81,10 @@ func (r *WorldRenderer) Update(w *world.World) {
 		}
 		r.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
 
-		if c.Eye != nil {
-			r.SetColor(1, 1.0, 0.0, 1.0)
-			r.DrawPartialCircle(c.Pos.X, c.Pos.Y, c.Eye.Range, c.Eye.FOV, math32.Angle(&math32.Vec2{0.0000001, 0.0000001}, &c.Eye.Dir))
-		}
+		// if c.Eye != nil {
+		// 	r.SetColor(1, 1.0, 0.0, 1.0)
+		// 	r.DrawPartialCircle(c.Pos.X, c.Pos.Y, c.Eye.Range, c.Eye.FOV, math32.Angle(&math32.Vec2{0.0000001, 0.0000001}, &c.Eye.Dir))
+		// }
 	}
 
 	if gl.GetError() != gl.NO_ERROR {
