@@ -35,8 +35,6 @@ func NewSimulation() *Simulation {
 	world := world.NewWorld(
 		2000.0, // TODO: make it configurably
 		2000.0, // TODO: make it configurably
-		world.EdgeModeLoop,
-		world.StartModeRandom,
 	)
 
 	collisionSystem := system.NewCollision(world)

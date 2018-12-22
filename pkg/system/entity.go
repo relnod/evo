@@ -20,7 +20,7 @@ func NewEntity(world *world.World) *Entity {
 func (s *Entity) Init() {
 	for i := range s.world.Creatures {
 		var radius float32 = 3.0
-		if s.world.StartMode == world.StartModeRandom {
+		if s.world.Opts.StartMode == world.StartModeRandom {
 			radius = rand.Float32()*rand.Float32()*rand.Float32()*10 + 2.0
 		}
 

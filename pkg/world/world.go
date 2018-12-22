@@ -1,6 +1,8 @@
 package world
 
 import (
+	"math"
+
 	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/math32"
 	"github.com/relnod/evo/pkg/math32/collision"
@@ -19,20 +21,31 @@ const (
 type StartMode int
 
 const (
-	// StartModeRandom generates world full of random initial entities.
+	// StartModeRandom generates a world full of random entities.
 	StartModeRandom = 0
 
-	// StartModeFixed generates a world with one static entity.
+	// StartModeFixed generates a world with one static entity
 	StartModeFixed = 1
 )
+
+// Cell holds all entitties in a cell.
+type Cell struct {
+	TopLeft  math32.Vec2
+	BotRight math32.Vec2
+
+	Center math32.Vec2
+	Radius float32
+
+	Static  []*entity.Creature
+	Dynamic []*entity.Creature
+}
 
 // World holds all global world data
 type World struct {
 	Width  float32 `json:"width"`
 	Height float32 `json:"height"`
 
-	EdgeMode  EdgeMode  `json:"-"`
-	StartMode StartMode `json:"-"`
+	Opts *Options
 
 	Creatures []*entity.Creature `json:"entities"`
 
@@ -40,39 +53,54 @@ type World struct {
 	Dynamic []*entity.Creature `json:"-"`
 
 	Cells       []*Cell `json:"-"`
-	math32Cells int
+	numCells    int
 	cellsPerRow int
 	cellWidth   float32
 	cellHeight  float32
 }
 
-// NewWorld returns a new world.
-func NewWorld(width, height float32, edgeMode EdgeMode, startMode StartMode) *World {
-	math32Cells := 36
-	cellsPerRow := 6
+// Options holds a set of optional options to configure the world.
+type Options struct {
+	EdgeMode EdgeMode
 
-	math32Entities := 1
-	if startMode == StartModeRandom {
-		math32Entities = 1000
+	StartMode StartMode
+
+	EntitiesAtStart int
+}
+
+// NewWorld returns a new world.
+func NewWorld(width, height float32) *World {
+	return NewWorldWithOptions(width, height, &Options{})
+}
+
+func NewWorldWithOptions(width, height float32, opts *Options) *World {
+	numCells := 36
+	cellsPerRow := int(math.Sqrt(float64(numCells)))
+	cellsPerRow = 6
+
+	if opts.EntitiesAtStart == 0 {
+		opts.EntitiesAtStart = 1
+		if opts.StartMode == StartModeRandom {
+			opts.EntitiesAtStart = 1000
+		}
 	}
 
 	w := &World{
 		Width:  width,
 		Height: height,
 
-		EdgeMode:  edgeMode,
-		StartMode: startMode,
+		Opts: opts,
 
-		Creatures: make([]*entity.Creature, math32Entities),
+		Creatures: make([]*entity.Creature, opts.EntitiesAtStart),
 
 		Static:  make([]*entity.Creature, 1),
 		Dynamic: make([]*entity.Creature, 1),
 
-		Cells:       make([]*Cell, math32Cells),
-		math32Cells: math32Cells,
+		Cells:       make([]*Cell, numCells),
+		numCells:    numCells,
 		cellsPerRow: cellsPerRow,
-		cellWidth:   width / float32(math32Cells/cellsPerRow),
-		cellHeight:  height / float32(math32Cells/cellsPerRow),
+		cellWidth:   width / float32(numCells/cellsPerRow),
+		cellHeight:  height / float32(numCells/cellsPerRow),
 	}
 
 	w.createCells()

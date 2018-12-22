@@ -95,7 +95,7 @@ func (s *Collision) CreatureEdge() {
 }
 
 func (s *Collision) handleCreatureEdgeCollision(e *entity.Creature, border int) {
-	if s.world.EdgeMode == world.EdgeModeLoop {
+	if s.world.Opts.EdgeMode == world.EdgeModeLoop {
 		switch border {
 		case collision.LEFT:
 			e.Pos.X += s.world.Width
