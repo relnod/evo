@@ -22,7 +22,7 @@ type Client struct {
 	conn    net.Conn
 	decoder *json.Decoder
 
-	worldSubscriptions map[uuid.UUID]evo.WorldStream
+	worldSubscriptions map[uuid.UUID]evo.WorldFn
 }
 
 // NewClient returns a new websocket client with a given address.
@@ -39,7 +39,7 @@ func NewClient(addr string) *Client {
 		conn:    conn,
 		decoder: json.NewDecoder(conn),
 
-		worldSubscriptions: make(map[uuid.UUID]evo.WorldStream),
+		worldSubscriptions: make(map[uuid.UUID]evo.WorldFn),
 	}
 }
 
@@ -67,8 +67,8 @@ func (c *Client) Start() error {
 	}
 }
 
-// GetWorld returns retrieves the next world object from the server.
-func (c *Client) GetWorld() (*world.World, error) {
+// World retrieves the next world object from the server.
+func (c *Client) World() (*world.World, error) {
 	resp, err := http.Get("http://" + c.addr + "/world")
 	if err != nil {
 		return nil, err
@@ -88,12 +88,32 @@ func (c *Client) GetWorld() (*world.World, error) {
 	return &w, nil
 }
 
-// RegisterStream registers a stream via the websocket connection.
-func (c *Client) SubscribeWorld(stream evo.WorldStream) uuid.UUID {
+// Stats retrieves the next stats object from the server.
+func (c *Client) Stats() (*evo.Stats, error) {
+	resp, err := http.Get("http://" + c.addr + "/stats")
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+	var stats evo.Stats
+	err = json.Unmarshal(data, &stats)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
+func (c *Client) SubscribeWorldChange(stream evo.WorldFn) uuid.UUID {
 	u := uuid.New()
 	c.worldSubscriptions[u] = stream
 
-	err := c.sedMessage(api.EventSubscription, api.Subscription{
+	err := c.sendMessage(api.EventSubscription, api.Subscription{
 		Type: api.SubscriptionWorld,
 	})
 	if err != nil {
@@ -103,7 +123,7 @@ func (c *Client) SubscribeWorld(stream evo.WorldStream) uuid.UUID {
 	return u
 }
 
-func (c *Client) sedMessage(t api.EventType, message interface{}) error {
+func (c *Client) sendMessage(t api.EventType, message interface{}) error {
 	m, err := json.Marshal(message)
 	if err != nil {
 		return err
@@ -120,7 +140,6 @@ func (c *Client) sedMessage(t api.EventType, message interface{}) error {
 	return nil
 }
 
-// UnRegisterStream un registers a stream.
-func (c *Client) UnsubscribeWorld(id uuid.UUID) {
+func (c *Client) UnsubscribeWorldChange(id uuid.UUID) {
 	delete(c.worldSubscriptions, id)
 }

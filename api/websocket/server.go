@@ -38,6 +38,7 @@ func NewServer(producer evo.Producer, addr string) *Server {
 	}
 	http.HandleFunc("/", s.handleConnection)
 	http.HandleFunc("/world", s.handleGetWorld)
+	http.HandleFunc("/stats", s.handleGetStats)
 	return s
 }
 
@@ -86,7 +87,7 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 			}
 			switch subscription.Type {
 			case api.SubscriptionWorld:
-				id := s.producer.SubscribeWorld(func(w *world.World) {
+				id := s.producer.SubscribeWorldChange(func(w *world.World) {
 					msg, err := json.Marshal(w)
 					if err != nil {
 						// TODO: maybe improve error handling
@@ -96,15 +97,24 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 					event := &api.Event{Type: api.EventWorld, Message: msg}
 					conn.WriteJSON(event)
 				})
-				defer s.producer.UnsubscribeWorld(id)
+				defer s.producer.UnsubscribeWorldChange(id)
 			}
 		}
 	}
 }
 
 func (s *Server) handleGetWorld(w http.ResponseWriter, r *http.Request) {
-	wld, _ := s.producer.GetWorld()
+	wld, _ := s.producer.World()
 	dat, err := json.Marshal(wld)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	w.Write(dat)
+}
+
+func (s *Server) handleGetStats(w http.ResponseWriter, r *http.Request) {
+	stats, _ := s.producer.Stats()
+	dat, err := json.Marshal(stats)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

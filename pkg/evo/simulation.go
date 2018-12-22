@@ -1,11 +1,11 @@
 package evo
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/relnod/evo/pkg/system"
 	"github.com/relnod/evo/pkg/world"
 )
@@ -14,22 +14,27 @@ import (
 type Simulation struct {
 	ticksPerSecond int
 
+	stats           *Stats
 	world           *world.World
 	collisionSystem *system.Collision
 	entitySystem    *system.Entity
 
-	worldSubscriptions map[uuid.UUID]WorldStream
+	// Stores the subscriptions to a world change.
+	worldSubscriptions map[uuid.UUID]WorldFn
 }
 
 // NewSimulation creates a new simulation.
 func NewSimulation() *Simulation {
-	seed := time.Now().Unix()
-	rand.Seed(seed)
-	log.Println("Seed: ", seed)
+	stats := &Stats{
+		start: time.Now(),
+		Seed:  time.Now().Unix(),
+	}
+
+	rand.Seed(stats.Seed)
 
 	world := world.NewWorld(
-		2000.0, // @todo
-		2000.0, // @todo
+		2000.0, // TODO: make it configurably
+		2000.0, // TODO: make it configurably
 		world.EdgeModeLoop,
 		world.StartModeRandom,
 	)
@@ -40,46 +45,59 @@ func NewSimulation() *Simulation {
 	entitySystem.Init()
 
 	return &Simulation{
-		ticksPerSecond:  120,
+		ticksPerSecond: 120,
+
+		stats:           stats,
 		world:           world,
 		collisionSystem: collisionSystem,
 		entitySystem:    entitySystem,
 
-		worldSubscriptions: make(map[uuid.UUID]WorldStream),
+		worldSubscriptions: make(map[uuid.UUID]WorldFn),
 	}
 }
 
-// Start starts the simulation in a new gorotinue.
+// Start starts the simulation.
 func (s *Simulation) Start() error {
 	for {
 		s.world.UpdateCells()
 		s.collisionSystem.Update()
 		s.entitySystem.Update()
-		s.pushStreams()
-		// s.handleStreams()
-		// s.handleEvents()
+		s.handleSubscriptions()
 
 		time.Sleep(time.Second / time.Duration(s.ticksPerSecond))
 	}
 }
 
-func (s *Simulation) GetWorld() (*world.World, error) {
+// World retruns the state of the current world.
+func (s *Simulation) World() (*world.World, error) {
 	return s.world, nil
 }
 
-func (s *Simulation) SubscribeWorld(stream WorldStream) uuid.UUID {
+// Stats returns the current statistics.
+func (s *Simulation) Stats() (*Stats, error) {
+	s.updateStats()
+	return s.stats, nil
+}
+
+// SubscribeWorldChange implements the world change subscription.
+func (s *Simulation) SubscribeWorldChange(stream WorldFn) uuid.UUID {
 	u := uuid.New()
 	s.worldSubscriptions[u] = stream
 
 	return u
 }
 
-func (s *Simulation) UnsubscribeWorld(id uuid.UUID) {
+// UnsubscribeWorldChange implements the unsubscription of a world change.
+func (s *Simulation) UnsubscribeWorldChange(id uuid.UUID) {
 	delete(s.worldSubscriptions, id)
 }
 
-func (s *Simulation) pushStreams() {
+func (s *Simulation) handleSubscriptions() {
 	for _, stream := range s.worldSubscriptions {
 		stream(s.world)
 	}
+}
+
+func (s *Simulation) updateStats() {
+	s.stats.Running = time.Since(s.stats.start) / (time.Millisecond * 1000)
 }

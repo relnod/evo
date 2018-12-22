@@ -24,7 +24,7 @@ func NewClient(producer evo.Producer) *Client {
 
 // Init intitializes the window and renderer.
 func (c *Client) Init() {
-	w, err := c.producer.GetWorld()
+	w, err := c.producer.World()
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -58,7 +58,7 @@ func (c *Client) Init() {
 	camera.Update()
 	window.Update()
 
-	c.producer.SubscribeWorld(func(w *world.World) {
+	c.producer.SubscribeWorldChange(func(w *world.World) {
 		window.Update()
 		renderer.Update(w)
 	})
