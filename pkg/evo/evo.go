@@ -14,6 +14,8 @@ type Stats struct {
 
 	Seed    int64         `json:"seed"`
 	Running time.Duration `json:"running"`
+
+	Population int `json:"population"`
 }
 
 type WorldFn func(*world.World)
@@ -42,4 +44,8 @@ type Producer interface {
 type Consumer interface {
 	Init()
 	Start() error
+}
+
+type WorldChangeSubscriber interface {
+	UpdatedWorld(world *world.World)
 }

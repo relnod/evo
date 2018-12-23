@@ -5,9 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
-
-	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/pkg/evo"
 )
 
@@ -15,8 +12,6 @@ import (
 type Server struct {
 	producer evo.Producer
 	addr     string
-
-	subscriptions map[uuid.UUID]api.Subscription
 }
 
 // New returns a new api server.
@@ -26,14 +21,15 @@ func New(producer evo.Producer, addr string) *Server {
 		addr:     addr,
 	}
 
-	http.HandleFunc("/", s.handleSocketConnection)
+	http.HandleFunc("/connect", s.handleSocketConnection)
 	http.HandleFunc("/world", s.handleGetWorld)
 	http.HandleFunc("/stats", s.handleGetStats)
 
 	return s
 }
 
-// Start starts the server.
+// Start starts the http server.
+// This also starts the producer in a go routine.
 func (s *Server) Start() error {
 	go s.producer.Start()
 

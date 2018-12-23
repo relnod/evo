@@ -40,10 +40,10 @@ func (s *Entity) Update() {
 		if c.State == entity.StateBreading {
 			c.State = entity.StateAdult
 			c.LastBread = c.Age
-			// log.Printf("Genration: %d, Population: %d\n", c.Generation+1, len(s.world.Creatures))
+			// log.Printf("Genration: %d, Population: %d\n", c.Consts.Generation+1, len(s.world.Creatures))
 			c.Energy -= c.Radius
 			for i := 0; i < rand.Intn(2)+1; i++ {
-				child := c.GetChild()
+				child := c.NewChild()
 				if c.Energy-child.Energy > 0 {
 					c.Energy -= child.Energy
 					s.world.Creatures = append(s.world.Creatures, child)

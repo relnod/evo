@@ -52,7 +52,7 @@ func NewCreature(pos math32.Vec2, radius float32) *Creature {
 	return newCreature(pos, radius, newBrain(), 0, nil)
 }
 
-func (e *Creature) GetChild() *Creature {
+func (e *Creature) NewChild() *Creature {
 	r := mutate(e.Radius, 0.1, 0.5)
 	r = mutate(e.Radius, 0.9, 0.3)
 
@@ -212,6 +212,7 @@ func (e *Creature) updateFromBrain() {
 		if e.Eye.Biggest > e.Radius {
 			in2 = 0.9
 		}
+
 		e.Eye.Reset()
 	}
 
@@ -244,11 +245,9 @@ func (e *Creature) updateFromBrain() {
 	e.Eye.Dir = e.Dir
 }
 
+// Collide gets called, when the creature collides with another creature.
 func (e *Creature) Collide(e2 *Creature) {
-	if e.Brain != nil && e2.Brain == nil {
-		e.Energy += e2.Radius / 2.0 * 3.0
-		e2.Die()
-	} else if e.Radius > e2.Radius && !e.IsSameSpecies(e2) {
+	if e.Radius > e2.Radius && !e.IsSameSpecies(e2) {
 		e.Energy += e2.Radius / 2.0 * 3.0
 		e2.Die()
 	}

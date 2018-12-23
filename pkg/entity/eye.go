@@ -11,8 +11,9 @@ type Eye struct {
 	Range float32     `json:"range"`
 	FOV   float32     `json:"fov"`
 
-	Count   int
-	Biggest float32
+	Count    int
+	Biggest  float32
+	Distance float32
 }
 
 func NewEye(eyeRange float32) *Eye {

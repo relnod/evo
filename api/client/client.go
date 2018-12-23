@@ -27,7 +27,7 @@ type Client struct {
 
 // New returns a new websocket client with a given address.
 func New(addr string) *Client {
-	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
+	u := url.URL{Scheme: "ws", Host: addr, Path: "/connect"}
 
 	conn, err := websocket.Dial(u.String(), addr)
 	if err != nil {

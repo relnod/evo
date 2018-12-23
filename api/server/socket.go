@@ -21,7 +21,6 @@ var upgrader = websocket.Upgrader{
 
 // handleSocketConnection handles a websocket connection.
 func (s *Server) handleSocketConnection(w http.ResponseWriter, r *http.Request) {
-
 	log.Println("Connecting to Client")
 	defer func() { log.Println("Disconnecting Client") }()
 

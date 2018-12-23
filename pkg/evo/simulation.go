@@ -98,4 +98,5 @@ func (s *Simulation) handleSubscriptions() {
 
 func (s *Simulation) updateStats() {
 	s.stats.Running = time.Since(s.stats.start) / (time.Millisecond * 1000)
+	s.stats.Population = len(s.world.Creatures)
 }
