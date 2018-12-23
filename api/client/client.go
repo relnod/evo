@@ -1,4 +1,4 @@
-package websocket
+package client
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"net/url"
 
 	"github.com/google/uuid"
-	wsocket "github.com/goxjs/websocket"
+	"github.com/goxjs/websocket"
 
 	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/pkg/evo"
@@ -25,11 +25,11 @@ type Client struct {
 	worldSubscriptions map[uuid.UUID]evo.WorldFn
 }
 
-// NewClient returns a new websocket client with a given address.
-func NewClient(addr string) *Client {
+// New returns a new websocket client with a given address.
+func New(addr string) *Client {
 	u := url.URL{Scheme: "ws", Host: addr, Path: "/"}
 
-	conn, err := wsocket.Dial(u.String(), addr)
+	conn, err := websocket.Dial(u.String(), addr)
 	if err != nil {
 		log.Fatal("Failed to create connection: ", err)
 	}

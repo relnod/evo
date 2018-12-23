@@ -33,7 +33,7 @@ func (s *Entity) Update() {
 		c.Update()
 
 		if !c.Alive {
-			s.world.RemoveCreature(i)
+			s.world.RemoveEntity(i)
 			continue
 		}
 

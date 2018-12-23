@@ -68,6 +68,10 @@ type Options struct {
 	EntitiesAtStart int
 }
 
+type IWorld interface {
+	FindEntity() *entity.Creature
+}
+
 // NewWorld returns a new world.
 func NewWorld(width, height float32) *World {
 	return NewWorldWithOptions(width, height, &Options{})
@@ -77,6 +81,8 @@ func NewWorldWithOptions(width, height float32, opts *Options) *World {
 	numCells := 36
 	cellsPerRow := int(math.Sqrt(float64(numCells)))
 	cellsPerRow = 6
+	cellWidth := width / float32(numCells/cellsPerRow)
+	cellHeight := height / float32(numCells/cellsPerRow)
 
 	if opts.EntitiesAtStart == 0 {
 		opts.EntitiesAtStart = 1
@@ -96,44 +102,46 @@ func NewWorldWithOptions(width, height float32, opts *Options) *World {
 		Static:  make([]*entity.Creature, 1),
 		Dynamic: make([]*entity.Creature, 1),
 
-		Cells:       make([]*Cell, numCells),
+		Cells:       CreateCells(cellWidth, cellHeight, cellsPerRow, numCells),
 		numCells:    numCells,
 		cellsPerRow: cellsPerRow,
-		cellWidth:   width / float32(numCells/cellsPerRow),
-		cellHeight:  height / float32(numCells/cellsPerRow),
+		cellWidth:   cellWidth,
+		cellHeight:  cellHeight,
 	}
-
-	w.createCells()
 
 	return w
 }
 
-func (w *World) createCells() {
-	radius := (&math32.Vec2{X: w.cellWidth, Y: w.cellHeight}).Len()
+func CreateCells(cellWidth float32, cellHeight float32, cellsPerRow int, numCells int) []*Cell {
+	radius := (&math32.Vec2{X: cellWidth, Y: cellHeight}).Len()
 
-	for row := 0; row < w.cellsPerRow; row++ {
-		for col := 0; col < w.cellsPerRow; col++ {
-			w.Cells[row*w.cellsPerRow+col] = &Cell{
+	cells := make([]*Cell, numCells)
+
+	for row := 0; row < cellsPerRow; row++ {
+		for col := 0; col < cellsPerRow; col++ {
+			cells[row*cellsPerRow+col] = &Cell{
 				TopLeft: math32.Vec2{
-					X: w.cellWidth * float32(row),
-					Y: w.cellHeight * float32(col),
+					X: cellWidth * float32(row),
+					Y: cellHeight * float32(col),
 				},
 				BotRight: math32.Vec2{
-					X: w.cellWidth * float32(row+1),
-					Y: w.cellHeight * float32(col+1),
+					X: cellWidth * float32(row+1),
+					Y: cellHeight * float32(col+1),
 				},
 
 				Static:  make([]*entity.Creature, 0),
 				Dynamic: make([]*entity.Creature, 0),
 			}
 
-			w.Cells[row*w.cellsPerRow+col].Center = math32.Vec2{
-				X: w.Cells[row*w.cellsPerRow+col].TopLeft.X + w.cellWidth/2.0,
-				Y: w.Cells[row*w.cellsPerRow+col].TopLeft.Y + w.cellHeight/2.0,
+			cells[row*cellsPerRow+col].Center = math32.Vec2{
+				X: cells[row*cellsPerRow+col].TopLeft.X + cellWidth/2.0,
+				Y: cells[row*cellsPerRow+col].TopLeft.Y + cellHeight/2.0,
 			}
-			w.Cells[row*w.cellsPerRow+col].Radius = radius
+			cells[row*cellsPerRow+col].Radius = radius
 		}
 	}
+
+	return cells
 }
 
 // UpdateCells moves all creatures to it's corresponding cell.
@@ -157,7 +165,7 @@ func (w *World) UpdateCells() {
 }
 
 // FindCell returns the cell for the given position.
-func (w *World) FindCell(pos *math32.Vec2) *Cell {
+func (w *World) findCell(pos *math32.Vec2) *Cell {
 	x := pos.X / w.cellWidth
 	y := pos.Y / w.cellHeight
 
@@ -170,7 +178,29 @@ func (w *World) FindCell(pos *math32.Vec2) *Cell {
 	return w.Cells[index]
 }
 
-func (w *World) RemoveCreature(i int) {
+func (w *World) FindEntity(pos *math32.Vec2) *entity.Creature {
+	cell := w.findCell(pos)
+
+	if cell == nil {
+		return nil
+	}
+
+	for _, c := range cell.Dynamic {
+		if collision.CirclePoint(&c.Pos, c.Radius+5, pos) {
+			return c
+		}
+	}
+
+	for _, c := range cell.Static {
+		if collision.CirclePoint(&c.Pos, c.Radius+5, pos) {
+			return c
+		}
+	}
+
+	return nil
+}
+
+func (w *World) RemoveEntity(i int) {
 	if i+1 >= len(w.Creatures) {
 		w.Creatures = w.Creatures[:i]
 		return

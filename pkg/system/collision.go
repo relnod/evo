@@ -108,25 +108,3 @@ func (s *Collision) handleCreatureEdgeCollision(e *entity.Creature, border int) 
 		}
 	}
 }
-
-func (s *Collision) FindCreature(pos *math32.Vec2) *entity.Creature {
-	cell := s.world.FindCell(pos)
-
-	if cell == nil {
-		return nil
-	}
-
-	for _, c := range cell.Dynamic {
-		if collision.CirclePoint(&c.Pos, c.Radius+5, pos) {
-			return c
-		}
-	}
-
-	for _, c := range cell.Static {
-		if collision.CirclePoint(&c.Pos, c.Radius+5, pos) {
-			return c
-		}
-	}
-
-	return nil
-}

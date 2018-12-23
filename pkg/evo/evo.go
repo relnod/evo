@@ -26,7 +26,7 @@ type Producer interface {
 	// World reutnrs the current state of the world.
 	World() (*world.World, error)
 
-	// Stats returns the statistics of the world in its current state.
+	// Stats returns some statistics of the world in its current state.
 	Stats() (*Stats, error)
 
 	// SubscribeWorldChange subscribes to a world change.
