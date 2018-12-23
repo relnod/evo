@@ -123,6 +123,10 @@ func (c *Client) SubscribeWorldChange(stream evo.WorldFn) uuid.UUID {
 	return u
 }
 
+func (c *Client) UnsubscribeWorldChange(id uuid.UUID) {
+	delete(c.worldSubscriptions, id)
+}
+
 func (c *Client) sendMessage(t api.EventType, message interface{}) error {
 	m, err := json.Marshal(message)
 	if err != nil {
@@ -138,8 +142,4 @@ func (c *Client) sendMessage(t api.EventType, message interface{}) error {
 	}
 	c.conn.Write(data)
 	return nil
-}
-
-func (c *Client) UnsubscribeWorldChange(id uuid.UUID) {
-	delete(c.worldSubscriptions, id)
 }

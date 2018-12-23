@@ -57,12 +57,14 @@ func NewSimulation() *Simulation {
 // Start starts the simulation.
 func (s *Simulation) Start() error {
 	for {
+		start := time.Now()
+
 		s.world.UpdateCells()
 		s.collisionSystem.Update()
 		s.entitySystem.Update()
 		s.handleSubscriptions()
 
-		time.Sleep(time.Second / time.Duration(s.ticksPerSecond))
+		time.Sleep(time.Second/time.Duration(s.ticksPerSecond) - time.Since(start))
 	}
 }
 

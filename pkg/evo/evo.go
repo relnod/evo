@@ -45,7 +45,3 @@ type Consumer interface {
 	Init()
 	Start() error
 }
-
-type WorldChangeSubscriber interface {
-	UpdatedWorld(world *world.World)
-}
