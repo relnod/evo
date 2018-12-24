@@ -59,7 +59,7 @@ func (s *Simulation) Start() error {
 	for {
 		start := time.Now()
 
-		s.world.UpdateCells()
+		s.world.Update()
 		s.collisionSystem.Update()
 		s.entitySystem.Update()
 		s.handleSubscriptions()

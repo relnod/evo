@@ -29,11 +29,12 @@ func (s *Entity) Init() {
 }
 
 func (s *Entity) Update() {
+	var remove []int
 	for i, c := range s.world.Creatures {
 		c.Update()
 
 		if !c.Alive {
-			s.world.RemoveEntity(i)
+			remove = append(remove, i)
 			continue
 		}
 
@@ -50,6 +51,10 @@ func (s *Entity) Update() {
 				}
 			}
 		}
+	}
+
+	for _, i := range remove {
+		s.world.RemoveEntity(i)
 	}
 }
 

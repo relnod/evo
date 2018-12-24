@@ -68,10 +68,6 @@ type Options struct {
 	EntitiesAtStart int
 }
 
-type IWorld interface {
-	FindEntity() *entity.Creature
-}
-
 // NewWorld returns a new world.
 func NewWorld(width, height float32) *World {
 	return NewWorldWithOptions(width, height, &Options{})
@@ -144,8 +140,8 @@ func CreateCells(cellWidth float32, cellHeight float32, cellsPerRow int, numCell
 	return cells
 }
 
-// UpdateCells moves all creatures to it's corresponding cell.
-func (w *World) UpdateCells() {
+// Update moves all creatures to it's corresponding cell.
+func (w *World) Update() {
 	for _, cell := range w.Cells {
 		cell.Static = cell.Static[:0]
 		cell.Dynamic = cell.Dynamic[:0]

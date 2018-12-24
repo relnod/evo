@@ -45,3 +45,7 @@ type Consumer interface {
 	Init()
 	Start() error
 }
+
+type System interface {
+	Update()
+}
