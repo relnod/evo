@@ -43,7 +43,7 @@ func NewSimulation() *Simulation {
 	entitySystem.Init()
 
 	return &Simulation{
-		ticksPerSecond: 120,
+		ticksPerSecond: 60,
 
 		stats:           stats,
 		world:           world,
