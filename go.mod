@@ -14,7 +14,7 @@ require (
 	github.com/goxjs/websocket v0.0.0-20171128194605-ac3da9cf0835
 	github.com/patrikeh/go-deep v0.0.0-20180914121726-f06237cf3137
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.2.2 // indirect
+	github.com/stretchr/testify v1.2.2
 	golang.org/x/mobile v0.0.0-20181130133120-ca3c58166ed8
 	golang.org/x/net v0.0.0-20181217023233-e147a9138326 // indirect
 	honnef.co/go/js/dom v0.0.0-20181202134054-9dbdcd412bde // indirect

@@ -174,7 +174,7 @@ func (w *World) findCell(pos *math32.Vec2) *Cell {
 	return w.Cells[index]
 }
 
-func (w *World) FindEntity(pos *math32.Vec2) *entity.Creature {
+func (w *World) EntityAt(pos *math32.Vec2) *entity.Creature {
 	cell := w.findCell(pos)
 
 	if cell == nil {

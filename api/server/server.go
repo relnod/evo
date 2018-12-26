@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/relnod/evo/pkg/evo"
 )
@@ -21,10 +22,6 @@ func New(producer evo.Producer, addr string) *Server {
 		addr:     addr,
 	}
 
-	http.HandleFunc("/connect", s.handleSocketConnection)
-	http.HandleFunc("/world", s.handleGetWorld)
-	http.HandleFunc("/stats", s.handleGetStats)
-
 	return s
 }
 
@@ -33,7 +30,19 @@ func New(producer evo.Producer, addr string) *Server {
 func (s *Server) Start() error {
 	go s.producer.Start()
 
-	err := http.ListenAndServe(s.addr, nil)
+	r := http.NewServeMux()
+
+	r.HandleFunc("/connect", s.handleSocketConnection)
+	r.HandleFunc("/world", s.handleGetWorld)
+	r.HandleFunc("/stats", s.handleGetStats)
+
+	// Register pprof handlers
+	r.HandleFunc("/debug/pprof/", pprof.Index)
+	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	r.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	err := http.ListenAndServe(s.addr, r)
 	if err != nil {
 		log.Fatal("Failed to create server", err)
 		return err
