@@ -124,6 +124,7 @@ func (c *Client) SubscribeWorldChange(stream evo.WorldFn) uuid.UUID {
 }
 
 func (c *Client) UnsubscribeWorldChange(id uuid.UUID) {
+	// TODO: actually unsubscribe world change.
 	delete(c.worldSubscriptions, id)
 }
 

@@ -1,6 +1,10 @@
 package api
 
-import "github.com/google/uuid"
+import (
+	"encoding/json"
+
+	"github.com/google/uuid"
+)
 
 // EventType defines the type of an event.
 type EventType int
@@ -19,8 +23,8 @@ const (
 
 // Event defines an api event.
 type Event struct {
-	Type    EventType `json:"type"`
-	Message []byte    `json:"message"`
+	Type    EventType       `json:"type"`
+	Message json.RawMessage `json:"message"`
 }
 
 type Subscription struct {
