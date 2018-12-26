@@ -6,11 +6,11 @@ import (
 )
 
 type resizeCallback func(width, height int)
-type keyCallback func(key glfw.Key)
+type keyCallback func(key glfw.Key, mods glfw.ModifierKey)
 
 // Window wrappes a glfw.Window
 type Window struct {
-	Window *glfw.Window
+	window *glfw.Window
 
 	width  int
 	height int
@@ -21,7 +21,10 @@ type Window struct {
 
 // NewWindow creates a new window
 func NewWindow(width, height int) *Window {
-	return &Window{width: width, height: height}
+	return &Window{
+		width:  width,
+		height: height,
+	}
 }
 
 // Init inititializes the window.
@@ -50,17 +53,22 @@ func (w *Window) Init() {
 		}
 
 		if w.keyCallback != nil {
-			w.keyCallback(key)
+			w.keyCallback(key, mods)
 		}
 	})
 
-	w.Window = window
+	w.window = window
 }
 
 // Update updates the window.
 func (w *Window) Update() {
-	w.Window.SwapBuffers()
+	w.window.SwapBuffers()
 	glfw.PollEvents()
+}
+
+// Close closes the window.
+func (w *Window) Close() {
+	w.window.Destroy()
 }
 
 func (w *Window) OnResize(cb resizeCallback) {

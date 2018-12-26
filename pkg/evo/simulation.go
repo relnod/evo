@@ -13,6 +13,7 @@ import (
 // Simulation holds all simulation data.
 type Simulation struct {
 	ticksPerSecond int
+	running        bool
 
 	stats           *Stats
 	world           *world.World
@@ -56,7 +57,8 @@ func NewSimulation() *Simulation {
 
 // Start starts the simulation.
 func (s *Simulation) Start() error {
-	for {
+	s.running = true
+	for s.running {
 		start := time.Now()
 
 		s.world.Update()
@@ -66,6 +68,14 @@ func (s *Simulation) Start() error {
 
 		time.Sleep(time.Second/time.Duration(s.ticksPerSecond) - time.Since(start))
 	}
+	return nil
+}
+
+// Stop stops the simulation.
+func (s *Simulation) Stop() error {
+	s.running = false
+	// TODO: cleanup
+	return nil
 }
 
 // World retruns the state of the current world.

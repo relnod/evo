@@ -25,6 +25,9 @@ type Producer interface {
 	// Start start the producer.
 	Start() error
 
+	// Stop stops the producer.
+	Stop() error
+
 	// World reutnrs the current state of the world.
 	World() (*world.World, error)
 
@@ -44,8 +47,5 @@ type Producer interface {
 type Consumer interface {
 	Init()
 	Start() error
-}
-
-type System interface {
-	Update()
+	Stop() error
 }

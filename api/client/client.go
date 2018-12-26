@@ -22,6 +22,8 @@ type Client struct {
 	conn    net.Conn
 	decoder *json.Decoder
 
+	shouldClose bool
+
 	worldSubscriptions map[uuid.UUID]evo.WorldFn
 }
 
@@ -39,13 +41,15 @@ func New(addr string) *Client {
 		conn:    conn,
 		decoder: json.NewDecoder(conn),
 
+		shouldClose: false,
+
 		worldSubscriptions: make(map[uuid.UUID]evo.WorldFn),
 	}
 }
 
 // Start starts the client.
 func (c *Client) Start() error {
-	for {
+	for !c.shouldClose {
 		event := api.Event{}
 		err := c.decoder.Decode(&event)
 		if err != nil {
@@ -65,6 +69,14 @@ func (c *Client) Start() error {
 			}
 		}
 	}
+
+	return c.conn.Close()
+}
+
+// Stop stops the client.
+func (c *Client) Stop() error {
+	c.shouldClose = true
+	return nil
 }
 
 // World retrieves the next world object from the server.

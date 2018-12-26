@@ -173,7 +173,6 @@ func (r *WorldRenderer) initCircleType() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbuffer)
 	verticesBytes := f32.Bytes(binary.LittleEndian, vertices...)
 	gl.BufferData(gl.ARRAY_BUFFER, verticesBytes, gl.STATIC_DRAW)
-	// gl.BindBuffer(gl.ARRAY_BUFFER, nil)
 
 	itemSize := 2
 	math32Items := len(vertices) / itemSize

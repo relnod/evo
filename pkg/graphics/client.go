@@ -15,6 +15,8 @@ type Renderer interface {
 // Client implements evo.Consumer
 type Client struct {
 	producer evo.Producer
+
+	window *Window
 }
 
 // NewClient returns a new render client.
@@ -36,7 +38,7 @@ func (c *Client) Init() {
 	window.OnResize(func(width, height int) {
 		renderer.SetSize(width, height)
 	})
-	window.OnKey(func(key glfw.Key) {
+	window.OnKey(func(key glfw.Key, mods glfw.ModifierKey) {
 		switch key {
 		case glfw.KeyKPAdd:
 			camera.ZoomIn()
@@ -50,6 +52,10 @@ func (c *Client) Init() {
 			camera.MoveLeft()
 		case glfw.KeyRight:
 			camera.MoveRight()
+		case glfw.KeyW:
+			if mods == glfw.ModControl {
+				c.Stop()
+			}
 		}
 	})
 
@@ -62,9 +68,16 @@ func (c *Client) Init() {
 		window.Update()
 		renderer.Update(w)
 	})
+
+	c.window = window
 }
 
 // Start starts the client.
 func (c *Client) Start() {
 	c.producer.Start()
+}
+
+// Stop stops the graphics client.
+func (c *Client) Stop() {
+	c.producer.Stop()
 }

@@ -41,6 +41,12 @@ func (s *Server) Start() error {
 	return nil
 }
 
+// Stop stops the server.
+func (s *Server) Stop() error {
+	// TODO: shutdown server
+	return nil
+}
+
 func (s *Server) handleGetWorld(w http.ResponseWriter, r *http.Request) {
 	wld, _ := s.producer.World()
 	dat, err := json.Marshal(wld)
