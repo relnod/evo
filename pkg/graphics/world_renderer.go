@@ -2,7 +2,6 @@ package graphics
 
 import (
 	"encoding/binary"
-	"fmt"
 	"log"
 	"math"
 
@@ -135,7 +134,6 @@ func (w *WorldRenderer) Init() {
 func (w WorldRenderer) UpdateViewport(zoom, x, y float64) {
 	dw := float64(w.width) / float64(w.viewportWidth)
 	dh := float64(w.height) / float64(w.viewportHeight)
-	fmt.Println(dw, dh)
 	d := dw
 	if dw > dh {
 		d = dh
