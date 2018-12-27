@@ -64,23 +64,23 @@ func (c *Client) Init() {
 		switch key {
 		case glfw.KeyKPAdd:
 			if mods == glfw.ModControl {
-				camera.ZoomIn()
-			} else {
 				ticks, err := c.producer.Ticks()
 				if err != nil {
 					log.Fatal(err.Error())
 				}
 				c.producer.SetTicks(ticks + 10)
+			} else {
+				camera.ZoomIn()
 			}
 		case glfw.KeyKPSubtract:
 			if mods == glfw.ModControl {
-				camera.ZoomOut()
-			} else {
 				ticks, err := c.producer.Ticks()
 				if err != nil {
 					log.Fatal(err.Error())
 				}
 				c.producer.SetTicks(ticks - (ticks / 2))
+			} else {
+				camera.ZoomOut()
 			}
 		case glfw.KeyDown:
 			camera.MoveDown()
