@@ -13,13 +13,17 @@ import (
 type Server struct {
 	producer evo.Producer
 	addr     string
+
+	debug bool
 }
 
 // New returns a new api server.
-func New(producer evo.Producer, addr string) *Server {
+func New(producer evo.Producer, addr string, debug bool) *Server {
 	s := &Server{
 		producer: producer,
 		addr:     addr,
+
+		debug: debug,
 	}
 
 	return s
@@ -36,12 +40,14 @@ func (s *Server) Start() error {
 	r.HandleFunc("/world", s.handleGetWorld)
 	r.HandleFunc("/stats", s.handleGetStats)
 
-	// Register pprof handlers
-	r.HandleFunc("/debug/pprof/", pprof.Index)
-	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	r.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	if s.debug {
+		r.HandleFunc("/debug/pprof/", pprof.Index)
+		r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		r.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		r.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	}
+
 	err := http.ListenAndServe(s.addr, r)
 	if err != nil {
 		log.Fatal("Failed to create server", err)
