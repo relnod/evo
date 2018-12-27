@@ -3,12 +3,12 @@ package graphics
 // Camera defines a 2D camera, that can zoom and move in all four directions.
 type Camera struct {
 	// zoom should alwys be above 1.0
-	zoom float32
+	zoom float64
 
 	// x should always be between 0.0 and 0.9
-	x float32
+	x float64
 	// y should always be between 0.0 and 0.9
-	y float32
+	y float64
 
 	renderer Renderer
 }

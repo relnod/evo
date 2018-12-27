@@ -4,8 +4,8 @@ import (
 	"math/rand"
 
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/math32"
-	"github.com/relnod/evo/pkg/math32/collision"
+	"github.com/relnod/evo/pkg/math64"
+	"github.com/relnod/evo/pkg/math64/collision"
 	"github.com/relnod/evo/pkg/world"
 )
 
@@ -19,9 +19,9 @@ func NewEntity(world *world.World) *Entity {
 
 func (s *Entity) Init() {
 	for i := range s.world.Creatures {
-		var radius float32 = 3.0
+		var radius = 3.0
 		if s.world.Opts.StartMode == world.StartModeRandom {
-			radius = rand.Float32()*rand.Float32()*rand.Float32()*10 + 2.0
+			radius = rand.Float64()*rand.Float64()*rand.Float64()*10 + 2.0
 		}
 
 		s.world.Creatures[i] = entity.NewCreature(s.randomPosition(radius), radius)
@@ -58,10 +58,10 @@ func (s *Entity) Update() {
 	}
 }
 
-func (s *Entity) randomPosition(radius float32) math32.Vec2 {
-	pos := math32.Vec2{
-		X: rand.Float32()*(s.world.Width-(2*radius)) + radius,
-		Y: rand.Float32()*(s.world.Height-(2*radius)) + radius,
+func (s *Entity) randomPosition(radius float64) math64.Vec2 {
+	pos := math64.Vec2{
+		X: rand.Float64()*(float64(s.world.Width)-(2*radius)) + radius,
+		Y: rand.Float64()*(float64(s.world.Height)-(2*radius)) + radius,
 	}
 
 	for _, creature := range s.world.Creatures {

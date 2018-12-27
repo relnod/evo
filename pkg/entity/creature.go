@@ -6,7 +6,7 @@ import (
 	deep "github.com/patrikeh/go-deep"
 
 	"github.com/relnod/evo/pkg/config"
-	"github.com/relnod/evo/pkg/math32"
+	"github.com/relnod/evo/pkg/math64"
 )
 
 // State defines the state of a creature.
@@ -22,20 +22,20 @@ const (
 // Creature can either be moving (animal) or stand still (plant).
 type Creature struct {
 	// Current position in the world.
-	Pos math32.Vec2 `json:"pos"`
+	Pos math64.Vec2 `json:"pos"`
 
 	// The direction the creature is facing
-	Dir    math32.Vec2 `json:"-"`
-	Radius float32     `json:"radius"`
-	Speed  float32     `json:"speed"`
+	Dir    math64.Vec2 `json:"-"`
+	Radius float64     `json:"radius"`
+	Speed  float64     `json:"speed"`
 
 	Eye   *Eye         `json:"eye"`
 	Brain *deep.Neural `json:"-"`
 
 	Alive     bool    `json:"-"`
-	Energy    float32 `json:"-"`
-	LastBread float32 `json:"-"`
-	Age       float32 `json:"-"`
+	Energy    float64 `json:"-"`
+	LastBread float64 `json:"-"`
+	Age       float64 `json:"-"`
 	State     State   `json:"-"`
 
 	Consts Constants `json:"-"`
@@ -43,12 +43,12 @@ type Creature struct {
 
 type Constants struct {
 	Generation        int
-	EnergyConsumption float32
-	EnergyBreed       float32
-	LifeExpectancy    float32
+	EnergyConsumption float64
+	EnergyBreed       float64
+	LifeExpectancy    float64
 }
 
-func NewCreature(pos math32.Vec2, radius float32) *Creature {
+func NewCreature(pos math64.Vec2, radius float64) *Creature {
 	return newCreature(pos, radius, newBrain(), 0, nil)
 }
 
@@ -65,9 +65,9 @@ func (e *Creature) NewChild() *Creature {
 	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1, e.Eye)
 }
 
-func newCreature(pos math32.Vec2, radius float32, brain *deep.Neural, generation int, eye *Eye) *Creature {
-	var speed float32
-	energyConsumption := rand.Float32() / 120
+func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation int, eye *Eye) *Creature {
+	var speed float64
+	energyConsumption := rand.Float64() / 120
 	energy := radius
 	if radius > 4.0 {
 		speed = mutate(15.0/(radius*radius), 0.2, 1.0)
@@ -138,12 +138,12 @@ func newMutateBrain(brain *deep.Neural) *deep.Neural {
 	return deep.FromDump(dump)
 }
 
-func mutate(val float32, fac float32, chance float32) float32 {
-	if rand.Float32() > chance {
+func mutate(val float64, fac float64, chance float64) float64 {
+	if rand.Float64() > chance {
 		return val
 	}
 
-	return val * (1.0 + (rand.Float32()-0.5)*fac)
+	return val * (1.0 + (rand.Float64()-0.5)*fac)
 }
 
 func mutate64(val float64, fac float64, chance float64) float64 {
@@ -154,10 +154,10 @@ func mutate64(val float64, fac float64, chance float64) float64 {
 	return val * (1.0 + (rand.Float64()-0.5)*fac)
 }
 
-func randomDir() math32.Vec2 {
-	d := math32.Vec2{
-		X: float32(rand.Float32()*2 - 1),
-		Y: float32(rand.Float32()*2 - 1),
+func randomDir() math64.Vec2 {
+	d := math64.Vec2{
+		X: rand.Float64()*2 - 1,
+		Y: rand.Float64()*2 - 1,
 	}
 	d.Norm()
 

@@ -4,8 +4,8 @@ import (
 	"math"
 
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/math32"
-	"github.com/relnod/evo/pkg/math32/collision"
+	"github.com/relnod/evo/pkg/math64"
+	"github.com/relnod/evo/pkg/math64/collision"
 )
 
 // EdgeMode defines how the edge of the world is defined.
@@ -30,11 +30,11 @@ const (
 
 // Cell holds all entitties in a cell.
 type Cell struct {
-	TopLeft  math32.Vec2
-	BotRight math32.Vec2
+	TopLeft  math64.Vec2
+	BotRight math64.Vec2
 
-	Center math32.Vec2
-	Radius float32
+	Center math64.Vec2
+	Radius float64
 
 	Static  []*entity.Creature
 	Dynamic []*entity.Creature
@@ -42,8 +42,8 @@ type Cell struct {
 
 // World holds all global world data
 type World struct {
-	Width  float32 `json:"width"`
-	Height float32 `json:"height"`
+	Width  int `json:"width"`
+	Height int `json:"height"`
 
 	Opts *Options
 
@@ -55,8 +55,8 @@ type World struct {
 	Cells       []*Cell `json:"-"`
 	numCells    int
 	cellsPerRow int
-	cellWidth   float32
-	cellHeight  float32
+	cellWidth   int
+	cellHeight  int
 }
 
 // Options holds a set of optional options to configure the world.
@@ -69,16 +69,16 @@ type Options struct {
 }
 
 // NewWorld returns a new world.
-func NewWorld(width, height float32) *World {
+func NewWorld(width, height int) *World {
 	return NewWorldWithOptions(width, height, &Options{})
 }
 
-func NewWorldWithOptions(width, height float32, opts *Options) *World {
+func NewWorldWithOptions(width, height int, opts *Options) *World {
 	numCells := 36
 	cellsPerRow := int(math.Sqrt(float64(numCells)))
 	cellsPerRow = 6
-	cellWidth := width / float32(numCells/cellsPerRow)
-	cellHeight := height / float32(numCells/cellsPerRow)
+	cellWidth := width / numCells / cellsPerRow
+	cellHeight := height / numCells / cellsPerRow
 
 	if opts.EntitiesAtStart == 0 {
 		opts.EntitiesAtStart = 1
@@ -108,30 +108,30 @@ func NewWorldWithOptions(width, height float32, opts *Options) *World {
 	return w
 }
 
-func CreateCells(cellWidth float32, cellHeight float32, cellsPerRow int, numCells int) []*Cell {
-	radius := (&math32.Vec2{X: cellWidth, Y: cellHeight}).Len()
+func CreateCells(cellWidth int, cellHeight int, cellsPerRow int, numCells int) []*Cell {
+	radius := (&math64.Vec2{X: float64(cellWidth), Y: float64(cellHeight)}).Len()
 
 	cells := make([]*Cell, numCells)
 
 	for row := 0; row < cellsPerRow; row++ {
 		for col := 0; col < cellsPerRow; col++ {
 			cells[row*cellsPerRow+col] = &Cell{
-				TopLeft: math32.Vec2{
-					X: cellWidth * float32(row),
-					Y: cellHeight * float32(col),
+				TopLeft: math64.Vec2{
+					X: float64(cellWidth * row),
+					Y: float64(cellHeight * col),
 				},
-				BotRight: math32.Vec2{
-					X: cellWidth * float32(row+1),
-					Y: cellHeight * float32(col+1),
+				BotRight: math64.Vec2{
+					X: float64(cellWidth*row + 1),
+					Y: float64(cellHeight*col + 1),
 				},
 
 				Static:  make([]*entity.Creature, 0),
 				Dynamic: make([]*entity.Creature, 0),
 			}
 
-			cells[row*cellsPerRow+col].Center = math32.Vec2{
-				X: cells[row*cellsPerRow+col].TopLeft.X + cellWidth/2.0,
-				Y: cells[row*cellsPerRow+col].TopLeft.Y + cellHeight/2.0,
+			cells[row*cellsPerRow+col].Center = math64.Vec2{
+				X: cells[row*cellsPerRow+col].TopLeft.X + float64(cellWidth)/2.0,
+				Y: cells[row*cellsPerRow+col].TopLeft.Y + float64(cellHeight)/2.0,
 			}
 			cells[row*cellsPerRow+col].Radius = radius
 		}
@@ -161,11 +161,11 @@ func (w *World) Update() {
 }
 
 // FindCell returns the cell for the given position.
-func (w *World) findCell(pos *math32.Vec2) *Cell {
-	x := pos.X / w.cellWidth
-	y := pos.Y / w.cellHeight
+func (w *World) findCell(pos *math64.Vec2) *Cell {
+	x := int(pos.X) / w.cellWidth
+	y := int(pos.Y) / w.cellHeight
 
-	index := int(y)*w.cellsPerRow + int(x)
+	index := y*w.cellsPerRow + x
 
 	if index > 0 && index > len(w.Cells)-1 {
 		return nil
@@ -174,7 +174,7 @@ func (w *World) findCell(pos *math32.Vec2) *Cell {
 	return w.Cells[index]
 }
 
-func (w *World) EntityAt(pos *math32.Vec2) *entity.Creature {
+func (w *World) EntityAt(pos *math64.Vec2) *entity.Creature {
 	cell := w.findCell(pos)
 
 	if cell == nil {

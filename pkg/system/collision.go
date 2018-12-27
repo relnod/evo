@@ -2,8 +2,8 @@ package system
 
 import (
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/math32"
-	"github.com/relnod/evo/pkg/math32/collision"
+	"github.com/relnod/evo/pkg/math64"
+	"github.com/relnod/evo/pkg/math64/collision"
 	"github.com/relnod/evo/pkg/world"
 )
 
@@ -50,12 +50,12 @@ func (s *Collision) CreatureEyeCreature() {
 			}
 
 			for _, dynamic := range cell.Dynamic {
-				d := math32.Vec2{X: dynamic.Pos.X - creature.Pos.X, Y: dynamic.Pos.Y - creature.Pos.Y}
+				d := math64.Vec2{X: dynamic.Pos.X - creature.Pos.X, Y: dynamic.Pos.Y - creature.Pos.Y}
 				if d.Len() > 50 {
 					continue
 				}
 
-				if math32.Angle(&d, &creature.Dir) > creature.Eye.FOV {
+				if math64.Angle(&d, &creature.Dir) > creature.Eye.FOV {
 					continue
 				}
 
@@ -63,12 +63,12 @@ func (s *Collision) CreatureEyeCreature() {
 			}
 
 			for _, static := range cell.Static {
-				d := math32.Vec2{X: static.Pos.X - creature.Pos.X, Y: static.Pos.Y - creature.Pos.Y}
+				d := math64.Vec2{X: static.Pos.X - creature.Pos.X, Y: static.Pos.Y - creature.Pos.Y}
 				if d.Len() > 50 {
 					continue
 				}
 
-				if math32.Angle(&d, &creature.Dir) > creature.Eye.FOV {
+				if math64.Angle(&d, &creature.Dir) > creature.Eye.FOV {
 					continue
 				}
 
@@ -83,11 +83,11 @@ func (s *Collision) CreatureEdge() {
 		for _, c := range cell.Dynamic {
 			if c.Pos.X < 0.0 {
 				s.handleCreatureEdgeCollision(c, collision.LEFT)
-			} else if c.Pos.X > s.world.Width {
+			} else if c.Pos.X > float64(s.world.Width) {
 				s.handleCreatureEdgeCollision(c, collision.RIGHT)
 			} else if c.Pos.Y < 0.0 {
 				s.handleCreatureEdgeCollision(c, collision.TOP)
-			} else if c.Pos.Y > s.world.Height {
+			} else if c.Pos.Y > float64(s.world.Height) {
 				s.handleCreatureEdgeCollision(c, collision.BOT)
 			}
 		}
@@ -98,13 +98,13 @@ func (s *Collision) handleCreatureEdgeCollision(e *entity.Creature, border int) 
 	if s.world.Opts.EdgeMode == world.EdgeModeLoop {
 		switch border {
 		case collision.LEFT:
-			e.Pos.X += s.world.Width
+			e.Pos.X += float64(s.world.Width)
 		case collision.RIGHT:
-			e.Pos.X -= s.world.Width
+			e.Pos.X -= float64(s.world.Width)
 		case collision.TOP:
-			e.Pos.Y += s.world.Height
+			e.Pos.Y += float64(s.world.Height)
 		case collision.BOT:
-			e.Pos.Y -= s.world.Height
+			e.Pos.Y -= float64(s.world.Height)
 		}
 	}
 }

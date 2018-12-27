@@ -3,22 +3,22 @@ package entity
 import (
 	"math"
 
-	"github.com/relnod/evo/pkg/math32"
+	"github.com/relnod/evo/pkg/math64"
 )
 
 type Eye struct {
-	Dir   math32.Vec2 `json:"dir"`
-	Range float32     `json:"range"`
-	FOV   float32     `json:"fov"`
+	Dir   math64.Vec2 `json:"dir"`
+	Range float64     `json:"range"`
+	FOV   float64     `json:"fov"`
 
 	Count    int
-	Biggest  float32
-	Distance float32
+	Biggest  float64
+	Distance float64
 }
 
-func NewEye(eyeRange float32) *Eye {
+func NewEye(eyeRange float64) *Eye {
 	return &Eye{
-		Dir:   math32.Vec2{},
+		Dir:   math64.Vec2{},
 		Range: eyeRange,
 		FOV:   (80 / eyeRange * 40) * math.Pi / 180.0,
 	}

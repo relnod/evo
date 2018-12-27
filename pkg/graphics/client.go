@@ -9,7 +9,7 @@ import (
 )
 
 type Renderer interface {
-	UpdateViewport(zoom, x, y float32)
+	UpdateViewport(zoom, x, y float64)
 }
 
 // Client implements evo.Consumer
@@ -32,7 +32,7 @@ func (c *Client) Init() {
 		return
 	}
 
-	window := NewWindow(int(w.Width), int(w.Height))
+	window := NewWindow(w.Width, w.Height)
 	renderer := NewWorldRenderer(w.Width, w.Height)
 	camera := NewCamera(renderer)
 	window.OnResize(func(width, height int) {

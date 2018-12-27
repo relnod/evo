@@ -2,10 +2,10 @@ package graphics
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
 	"math"
 
-	"github.com/gopherjs/gopherjs/js"
 	"github.com/gopherjs/webgl"
 	"github.com/goxjs/gl"
 	"golang.org/x/mobile/exp/f32"
@@ -40,17 +40,14 @@ type RenderType struct {
 }
 
 type WorldRenderer struct {
-	width  float32
-	height float32
+	width  int
+	height int
 
-	viewportWidth  float32
-	viewportHeight float32
-
-	canvas *js.Object
+	viewportWidth  int
+	viewportHeight int
 
 	gl      *webgl.Context
 	program gl.Program
-	aspect  float32
 
 	aVertexPosition gl.Attrib
 	uColor          gl.Uniform
@@ -60,7 +57,7 @@ type WorldRenderer struct {
 	circle RenderType
 }
 
-func NewWorldRenderer(width, height float32) *WorldRenderer {
+func NewWorldRenderer(width, height int) *WorldRenderer {
 	return &WorldRenderer{
 		width:  width,
 		height: height,
@@ -83,7 +80,7 @@ func (r *WorldRenderer) Update(w *world.World) {
 
 		if c.Eye != nil {
 			r.SetColor(0.0, 0.0, 0.0, 0.0)
-			r.DrawPartialCircle(c.Pos.X, c.Pos.Y, c.Eye.Range, c.Eye.FOV, math.Atan2(float64(c.Eye.Dir.Y), float64(c.Eye.Dir.X)))
+			r.DrawPartialCircle(c.Pos.X, c.Pos.Y, c.Eye.Range, c.Eye.FOV, math.Atan2(c.Eye.Dir.Y, c.Eye.Dir.X))
 		}
 	}
 
@@ -94,8 +91,8 @@ func (r *WorldRenderer) Update(w *world.World) {
 
 func (r *WorldRenderer) SetSize(width, height int) {
 	gl.Viewport(0, 0, width, height)
-	r.width = float32(width)
-	r.height = float32(height)
+	r.width = width
+	r.height = height
 }
 
 func (r *WorldRenderer) Init() {
@@ -124,7 +121,6 @@ func (r *WorldRenderer) Init() {
 	gl.UseProgram(program)
 
 	r.program = program
-	r.aspect = r.width / r.height
 	r.aVertexPosition = gl.GetAttribLocation(program, "aVertexPosition")
 	r.uColor = gl.GetUniformLocation(program, "uColor")
 	r.mModel = gl.GetUniformLocation(program, "mModel")
@@ -136,16 +132,17 @@ func (r *WorldRenderer) Init() {
 	r.initCircleType()
 }
 
-func (r WorldRenderer) UpdateViewport(zoom, x, y float32) {
-	dw := r.width / r.viewportWidth
-	dh := r.height / r.viewportHeight
+func (r WorldRenderer) UpdateViewport(zoom, x, y float64) {
+	dw := float64(r.width) / float64(r.viewportWidth)
+	dh := float64(r.height) / float64(r.viewportHeight)
+	fmt.Println(dw, dh)
 	d := dw
 	if dw > dh {
 		d = dh
 	}
 	mScale := math32.NewMat4(
-		d*2.0/r.width*zoom, 0, 0, -x,
-		0, -d*2.0/r.height*zoom, 0, y,
+		float32(d*2.0/float64(r.width)*zoom), 0, 0, float32(-x),
+		0, float32(-d*2.0/float64(r.height)*zoom), 0, float32(y),
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
@@ -184,25 +181,25 @@ func (r *WorldRenderer) Clear() {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 }
 
-func (w *WorldRenderer) SetColor(r, g, b, a float32) {
-	gl.Uniform4f(w.uColor, r, g, b, a)
+func (w *WorldRenderer) SetColor(r, g, b, a float64) {
+	gl.Uniform4f(w.uColor, float32(r), float32(g), float32(b), float32(a))
 }
 
-func (r *WorldRenderer) DrawCircle(x, y, radius float32) {
+func (r *WorldRenderer) DrawCircle(x, y, radius float64) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.circle.VB)
 
 	gl.EnableVertexAttribArray(r.aVertexPosition)
 	gl.VertexAttribPointer(r.aVertexPosition, r.circle.ItemSize, gl.FLOAT, false, 0, 0)
 
 	mScale := math32.NewMat4(
-		radius, 0, 0, 0,
-		0, radius, 0, 0,
+		float32(radius), 0, 0, 0,
+		0, float32(radius), 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
 	mTranslation := math32.NewMat4(
-		1, 0, 0, x,
-		0, 1, 0, y,
+		1, 0, 0, float32(x),
+		0, 1, 0, float32(y),
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
@@ -211,21 +208,21 @@ func (r *WorldRenderer) DrawCircle(x, y, radius float32) {
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, r.circle.numItems)
 }
 
-func (r *WorldRenderer) DrawPartialCircle(x, y, radius, fov float32, angle float64) {
+func (r *WorldRenderer) DrawPartialCircle(x, y, radius, fov, angle float64) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, r.circle.VB)
 
 	gl.EnableVertexAttribArray(r.aVertexPosition)
 	gl.VertexAttribPointer(r.aVertexPosition, r.circle.ItemSize, gl.FLOAT, false, 0, 0)
 
 	mScale := math32.NewMat4(
-		radius, 0, 0, 0,
-		0, radius, 0, 0,
+		float32(radius), 0, 0, 0,
+		0, float32(radius), 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
 	mTranslation := math32.NewMat4(
-		1, 0, 0, x,
-		0, 1, 0, y,
+		1, 0, 0, float32(x),
+		0, 1, 0, float32(y),
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
@@ -249,5 +246,5 @@ func (r *WorldRenderer) DrawPartialCircle(x, y, radius, fov float32, angle float
 	)
 	gl.UniformMatrix4fv(r.mModel, mTranslation.Mult(mScale).Mult(mRotation).Transpose().Data)
 
-	gl.DrawArrays(gl.LINE_STRIP, 0, int(float32(r.circle.numItems)*fov/(2.0*math.Pi)))
+	gl.DrawArrays(gl.LINE_STRIP, 0, int(float64(r.circle.numItems)*fov/(2.0*math.Pi)))
 }
