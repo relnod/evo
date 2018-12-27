@@ -123,6 +123,18 @@ func (c *Client) Stats() (*evo.Stats, error) {
 	return &stats, nil
 }
 
+// PauseResume toggles pause/resume of the simulation of the remote server
+func (c *Client) PauseResume() error {
+	_, err := http.Get("http://" + c.addr + "/pauseresume")
+	return err
+}
+
+// Restart restarts the simulation on the remote server.
+func (c *Client) Restart() error {
+	_, err := http.Get("http://" + c.addr + "/restart")
+	return err
+}
+
 // Ticks retrives the ticks per second from the server.
 func (c *Client) Ticks() (int, error) {
 	resp, err := http.Get("http://" + c.addr + "/ticks")

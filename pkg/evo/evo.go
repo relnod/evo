@@ -28,6 +28,12 @@ type Producer interface {
 	// Stop stops the producer.
 	Stop() error
 
+	// PauseResume Toggles pause/resume.
+	PauseResume() error
+
+	// Restart restarts the simulation.
+	Restart() error
+
 	// World reutnrs the current state of the world.
 	World() (*world.World, error)
 
@@ -38,7 +44,7 @@ type Producer interface {
 	// The producer should update after every tick.
 	Ticks() (int, error)
 
-	// SetTicks sets the ticks per second
+	// SetTicks sets the ticks per second.
 	SetTicks(ticks int) error
 
 	// SubscribeWorldChange subscribes to a world change.

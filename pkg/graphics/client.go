@@ -12,7 +12,10 @@ const usage = `Keybindings:
 Ctrl-w        Stop client
 Ctrl-q        Stop client
 
-Ctrl-Add      Increase ticks per seconds.
+r             Restarts the remote simulation
+Space         Toggles pause/resume
+
+Ctrl-Add      Increase ticks per seconds
 Ctrl-Subtract Decrease ticks per seconds
 
 ArrwoLeft     Move camera left
@@ -95,6 +98,10 @@ func (c *Client) Init() {
 			if mods == glfw.ModControl {
 				c.Stop()
 			}
+		case glfw.KeyR:
+			c.producer.Restart()
+		case glfw.KeySpace:
+			c.producer.PauseResume()
 		}
 	})
 

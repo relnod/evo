@@ -39,6 +39,10 @@ func (s *Server) Start() error {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/connect", s.handleSocketConnection).Methods("GET")
+
+	r.HandleFunc("/pauseresume", s.handlePauseResume).Methods("GET")
+	r.HandleFunc("/restart", s.handleRestart).Methods("GET")
+
 	r.HandleFunc("/world", s.handleGetWorld).Methods("GET")
 	r.HandleFunc("/stats", s.handleGetStats).Methods("GET")
 	r.HandleFunc("/ticks", s.handleGetTicks).Methods("GET")
@@ -64,6 +68,20 @@ func (s *Server) Start() error {
 func (s *Server) Stop() error {
 	// TODO: shutdown server
 	return nil
+}
+
+func (s *Server) handlePauseResume(w http.ResponseWriter, r *http.Request) {
+	err := s.producer.PauseResume()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
+func (s *Server) handleRestart(w http.ResponseWriter, r *http.Request) {
+	err := s.producer.Restart()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
 func (s *Server) handleGetWorld(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +116,7 @@ func (s *Server) handleSetTicks(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	r.Body.Close()
 	ticks, err := strconv.Atoi(string(data))
 	if err != nil {
 		log.Fatal(err.Error())
