@@ -13,6 +13,6 @@ var debug = flag.Bool("debug", false, "enable debugging")
 func main() {
 	flag.Parse()
 
-	server := server.New(evo.NewSimulation(), *addr, *debug)
+	server := server.New(evo.NewSimulation(2000, 2000, 60), *addr, *debug)
 	server.Start()
 }

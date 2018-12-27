@@ -25,7 +25,7 @@ type Simulation struct {
 }
 
 // NewSimulation creates a new simulation.
-func NewSimulation() *Simulation {
+func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 	stats := &Stats{
 		start: time.Now(),
 		Seed:  time.Now().Unix(),
@@ -33,10 +33,7 @@ func NewSimulation() *Simulation {
 
 	rand.Seed(stats.Seed)
 
-	world := world.NewWorld(
-		2000.0, // TODO: make it configurably
-		2000.0, // TODO: make it configurably
-	)
+	world := world.NewWorld(width, height)
 
 	collisionSystem := system.NewCollision(world)
 	entitySystem := system.NewEntity(world)
@@ -44,7 +41,7 @@ func NewSimulation() *Simulation {
 	entitySystem.Init()
 
 	return &Simulation{
-		ticksPerSecond: 60,
+		ticksPerSecond: ticksPerSecond,
 
 		stats:           stats,
 		world:           world,
