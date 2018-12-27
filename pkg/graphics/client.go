@@ -41,9 +41,25 @@ func (c *Client) Init() {
 	window.OnKey(func(key glfw.Key, mods glfw.ModifierKey) {
 		switch key {
 		case glfw.KeyKPAdd:
-			camera.ZoomIn()
+			if mods == glfw.ModControl {
+				camera.ZoomIn()
+			} else {
+				ticks, err := c.producer.Ticks()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+				c.producer.SetTicks(ticks + 10)
+			}
 		case glfw.KeyKPSubtract:
-			camera.ZoomOut()
+			if mods == glfw.ModControl {
+				camera.ZoomOut()
+			} else {
+				ticks, err := c.producer.Ticks()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+				c.producer.SetTicks(ticks - (ticks / 2))
+			}
 		case glfw.KeyDown:
 			camera.MoveDown()
 		case glfw.KeyUp:
@@ -52,6 +68,10 @@ func (c *Client) Init() {
 			camera.MoveLeft()
 		case glfw.KeyRight:
 			camera.MoveRight()
+		case glfw.KeyQ:
+			if mods == glfw.ModControl {
+				c.Stop()
+			}
 		case glfw.KeyW:
 			if mods == glfw.ModControl {
 				c.Stop()

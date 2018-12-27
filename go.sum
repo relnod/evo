@@ -12,6 +12,10 @@ github.com/gopherjs/webgl v0.0.0-20180508003723-39bd6d41eeb5 h1:vrKguNTgy5fq7lTz
 github.com/gopherjs/webgl v0.0.0-20180508003723-39bd6d41eeb5/go.mod h1:obh2agNa9TmQ5C1MrSr2jgLIqV0b4Cl96m/ig2VAXwM=
 github.com/gopherjs/websocket v0.0.0-20170522004412-87ee47603f13 h1:3TcZe31zyrteCrSU2+4QSSx9N6sQC6PjXwrHjfX3USM=
 github.com/gopherjs/websocket v0.0.0-20170522004412-87ee47603f13/go.mod h1:jd+zY81Fx2lC4bfw58+Rflg1srqmedQjbBUejKOjYNY=
+github.com/gorilla/context v1.1.1 h1:AWwleXJkX/nhcU9bZSnZoi3h/qGYqQAGhq6zZe/aQW8=
+github.com/gorilla/context v1.1.1/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
+github.com/gorilla/mux v1.6.2 h1:Pgr17XVTNXAk3q/r4CpKzC5xBM/qW1uVLV+IhRZpIIk=
+github.com/gorilla/mux v1.6.2/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
 github.com/goxjs/gl v0.0.0-20171128034433-dc8f4a9a3c9c h1:naEGFd9BJuTM/1m2lP07Bl9O7O6Jqe+bUplBfAwdygg=

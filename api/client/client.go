@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/goxjs/websocket"
@@ -119,6 +121,32 @@ func (c *Client) Stats() (*evo.Stats, error) {
 	}
 
 	return &stats, nil
+}
+
+// Ticks retrives the ticks per second from the server.
+func (c *Client) Ticks() (int, error) {
+	resp, err := http.Get("http://" + c.addr + "/ticks")
+	if err != nil {
+		return 0, err
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	resp.Body.Close()
+	ticks, err := strconv.Atoi(string(data))
+	if err != nil {
+		return 0, err
+	}
+
+	return ticks, nil
+}
+
+// SetTicks sets the ticks per second of the remote simulation.
+func (c *Client) SetTicks(ticks int) error {
+	_, err := http.Post("http://"+c.addr+"/ticks", "text", strings.NewReader(strconv.Itoa(ticks)))
+	return err
 }
 
 func (c *Client) SubscribeWorldChange(stream evo.WorldFn) uuid.UUID {

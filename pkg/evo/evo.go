@@ -34,6 +34,13 @@ type Producer interface {
 	// Stats returns some statistics of the world in its current state.
 	Stats() (*Stats, error)
 
+	// Ticks returns the ticks per second.
+	// The producer should update after every tick.
+	Ticks() (int, error)
+
+	// SetTicks sets the ticks per second
+	SetTicks(ticks int) error
+
 	// SubscribeWorldChange subscribes to a world change.
 	// Each time the world gets updated, the provided function gets called.
 	// The returned unique id can be used to unsubscribe later.

@@ -2,10 +2,13 @@ package server
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/pprof"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/relnod/evo/pkg/evo"
 )
 
@@ -34,18 +37,19 @@ func New(producer evo.Producer, addr string, debug bool) *Server {
 func (s *Server) Start() error {
 	go s.producer.Start()
 
-	r := http.NewServeMux()
-
-	r.HandleFunc("/connect", s.handleSocketConnection)
-	r.HandleFunc("/world", s.handleGetWorld)
-	r.HandleFunc("/stats", s.handleGetStats)
+	r := mux.NewRouter()
+	r.HandleFunc("/connect", s.handleSocketConnection).Methods("GET")
+	r.HandleFunc("/world", s.handleGetWorld).Methods("GET")
+	r.HandleFunc("/stats", s.handleGetStats).Methods("GET")
+	r.HandleFunc("/ticks", s.handleGetTicks).Methods("GET")
+	r.HandleFunc("/ticks", s.handleSetTicks).Methods("POST")
 
 	if s.debug {
-		r.HandleFunc("/debug/pprof/", pprof.Index)
-		r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		r.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		r.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		r.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		r.HandleFunc("/debug/pprof/", pprof.Index).Methods("GET")
+		r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline).Methods("GET")
+		r.HandleFunc("/debug/pprof/profile", pprof.Profile).Methods("GET")
+		r.HandleFunc("/debug/pprof/symbol", pprof.Symbol).Methods("GET")
+		r.HandleFunc("/debug/pprof/trace", pprof.Trace).Methods("GET")
 	}
 
 	err := http.ListenAndServe(s.addr, r)
@@ -78,4 +82,25 @@ func (s *Server) handleGetStats(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err.Error())
 	}
 	w.Write(dat)
+}
+
+func (s *Server) handleGetTicks(w http.ResponseWriter, r *http.Request) {
+	ticks, _ := s.producer.Ticks()
+	dat, err := json.Marshal(ticks)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	w.Write(dat)
+}
+
+func (s *Server) handleSetTicks(w http.ResponseWriter, r *http.Request) {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	ticks, err := strconv.Atoi(string(data))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	s.producer.SetTicks(ticks)
 }

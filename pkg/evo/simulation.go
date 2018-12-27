@@ -86,6 +86,20 @@ func (s *Simulation) Stats() (*Stats, error) {
 	return s.stats, nil
 }
 
+// Ticks returns the ticks per second.
+func (s *Simulation) Ticks() (int, error) {
+	return s.ticksPerSecond, nil
+}
+
+// SetTicks sets the ticks per second.
+func (s *Simulation) SetTicks(ticks int) error {
+	if ticks <= 0 {
+		ticks = 1
+	}
+	s.ticksPerSecond = ticks
+	return nil
+}
+
 // SubscribeWorldChange implements the world change subscription.
 func (s *Simulation) SubscribeWorldChange(stream WorldFn) uuid.UUID {
 	u := uuid.New()
