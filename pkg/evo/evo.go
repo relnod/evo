@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/relnod/evo/pkg/world"
+	"github.com/relnod/evo/pkg/entity"
 )
 
 // Stats describes runtime statistics of the simulation.
@@ -18,7 +18,8 @@ type Stats struct {
 	Population int `json:"population"`
 }
 
-type WorldFn func(*world.World)
+// EntitiesChangedFn defnies a callback function for entities.
+type EntitiesChangedFn func([]*entity.Creature)
 
 // Producer produces data.
 type Producer interface {
@@ -34,8 +35,11 @@ type Producer interface {
 	// Restart restarts the simulation.
 	Restart() error
 
-	// World reutnrs the current state of the world.
-	World() (*world.World, error)
+	// Size returns the size of the simulation.
+	Size() (width int, height int, err error)
+
+	// Creatures returns all creatures in their current state.
+	Creatures() ([]*entity.Creature, error)
 
 	// Stats returns some statistics of the world in its current state.
 	Stats() (*Stats, error)
@@ -47,13 +51,13 @@ type Producer interface {
 	// SetTicks sets the ticks per second.
 	SetTicks(ticks int) error
 
-	// SubscribeWorldChange subscribes to a world change.
-	// Each time the world gets updated, the provided function gets called.
+	// SubscribeEntitiesChanged subscribes to changes of entities.
+	// Each time the entities get updated, the provided function gets called.
 	// The returned unique id can be used to unsubscribe later.
-	SubscribeWorldChange(fn WorldFn) uuid.UUID
+	SubscribeEntitiesChanged(fn EntitiesChangedFn) uuid.UUID
 
 	// UnsubscribeWorldChange ends a subscription to the world change.
-	UnsubscribeWorldChange(id uuid.UUID)
+	UnsubscribeEntitiesChanged(id uuid.UUID)
 }
 
 // Consumer consumes data

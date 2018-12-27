@@ -11,14 +11,14 @@ type EventType int
 
 // All event types.
 const (
-	EventWorld        EventType = iota
+	EventCreatures    EventType = iota
 	EventSubscription EventType = iota
 )
 
 type SubscriptionType int
 
 const (
-	SubscriptionWorld SubscriptionType = iota
+	SubscriptionCreaturesChanged SubscriptionType = iota
 )
 
 // Event defines an api event.

@@ -14,8 +14,9 @@ import (
 	"github.com/goxjs/websocket"
 
 	"github.com/relnod/evo/api"
+	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/evo"
-	"github.com/relnod/evo/pkg/world"
+	"github.com/relnod/evo/pkg/math64"
 )
 
 // Client implements evo.Producer
@@ -26,7 +27,7 @@ type Client struct {
 
 	shouldClose bool
 
-	worldSubscriptions map[uuid.UUID]evo.WorldFn
+	entitiesChangedSubscriptions map[uuid.UUID]evo.EntitiesChangedFn
 }
 
 // New returns a new websocket client with a given address.
@@ -45,7 +46,7 @@ func New(addr string) *Client {
 
 		shouldClose: false,
 
-		worldSubscriptions: make(map[uuid.UUID]evo.WorldFn),
+		entitiesChangedSubscriptions: make(map[uuid.UUID]evo.EntitiesChangedFn),
 	}
 }
 
@@ -59,15 +60,15 @@ func (c *Client) Start() error {
 		}
 
 		switch event.Type {
-		case api.EventWorld:
-			w := world.World{}
-			err = json.Unmarshal(event.Message, &w)
+		case api.EventCreatures:
+			var creatures []*entity.Creature
+			err = json.Unmarshal(event.Message, &creatures)
 			if err != nil {
-				log.Printf("Failed to decode world (%s)", err)
+				log.Printf("Failed to decode creatures (%s)", err)
 				return err
 			}
-			for _, stream := range c.worldSubscriptions {
-				stream(&w)
+			for _, fn := range c.entitiesChangedSubscriptions {
+				fn(creatures)
 			}
 		}
 	}
@@ -81,9 +82,30 @@ func (c *Client) Stop() error {
 	return nil
 }
 
-// World retrieves the next world object from the server.
-func (c *Client) World() (*world.World, error) {
-	resp, err := http.Get("http://" + c.addr + "/world")
+// Size retrieves the size from the remote simulation.
+func (c *Client) Size() (int, int, error) {
+	resp, err := http.Get("http://" + c.addr + "/size")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, 0, err
+	}
+	resp.Body.Close()
+	var v math64.Vec2
+	err = json.Unmarshal(data, &v)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return int(v.X), int(v.Y), nil
+}
+
+// Creatures retrieves the creatures from the remote simulation.
+func (c *Client) Creatures() ([]*entity.Creature, error) {
+	resp, err := http.Get("http://" + c.addr + "/creatures")
 	if err != nil {
 		return nil, err
 	}
@@ -93,13 +115,13 @@ func (c *Client) World() (*world.World, error) {
 		return nil, err
 	}
 	resp.Body.Close()
-	var w world.World
-	err = json.Unmarshal(data, &w)
+	var creatures []*entity.Creature
+	err = json.Unmarshal(data, creatures)
 	if err != nil {
 		return nil, err
 	}
 
-	return &w, nil
+	return creatures, nil
 }
 
 // Stats retrieves the next stats object from the server.
@@ -161,12 +183,12 @@ func (c *Client) SetTicks(ticks int) error {
 	return err
 }
 
-func (c *Client) SubscribeWorldChange(stream evo.WorldFn) uuid.UUID {
+func (c *Client) SubscribeEntitiesChanged(fn evo.EntitiesChangedFn) uuid.UUID {
 	u := uuid.New()
-	c.worldSubscriptions[u] = stream
+	c.entitiesChangedSubscriptions[u] = fn
 
 	err := c.sendMessage(api.EventSubscription, api.Subscription{
-		Type: api.SubscriptionWorld,
+		Type: api.SubscriptionCreaturesChanged,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -175,9 +197,9 @@ func (c *Client) SubscribeWorldChange(stream evo.WorldFn) uuid.UUID {
 	return u
 }
 
-func (c *Client) UnsubscribeWorldChange(id uuid.UUID) {
+func (c *Client) UnsubscribeEntitiesChanged(id uuid.UUID) {
 	// TODO: actually unsubscribe world change.
-	delete(c.worldSubscriptions, id)
+	delete(c.entitiesChangedSubscriptions, id)
 }
 
 func (c *Client) sendMessage(t api.EventType, message interface{}) error {

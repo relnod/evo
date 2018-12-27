@@ -9,8 +9,8 @@ import (
 	"github.com/goxjs/gl"
 	"golang.org/x/mobile/exp/f32"
 
+	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/math32"
-	"github.com/relnod/evo/pkg/world"
 )
 
 var vertexShader = `
@@ -66,10 +66,10 @@ func NewWorldRenderer(width, height int) *WorldRenderer {
 	}
 }
 
-func (w *WorldRenderer) Update(world *world.World) {
+func (w *WorldRenderer) Update(creatures []*entity.Creature) {
 	w.Clear()
 
-	for _, c := range world.Creatures {
+	for _, c := range creatures {
 		if c.Speed == 0 {
 			w.SetColor(0.0, 1.0-4.0/c.Radius/3.0, 0.0, 0.0)
 		} else {

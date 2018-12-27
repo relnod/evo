@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/relnod/evo/pkg/evo"
+	"github.com/relnod/evo/pkg/math64"
 )
 
 // Server implements evo.Consumer
@@ -43,7 +44,8 @@ func (s *Server) Start() error {
 	r.HandleFunc("/pauseresume", s.handlePauseResume).Methods("GET")
 	r.HandleFunc("/restart", s.handleRestart).Methods("GET")
 
-	r.HandleFunc("/world", s.handleGetWorld).Methods("GET")
+	r.HandleFunc("/size", s.handleGetSize).Methods("GET")
+	r.HandleFunc("/creatures", s.handleGetCreatures).Methods("GET")
 	r.HandleFunc("/stats", s.handleGetStats).Methods("GET")
 	r.HandleFunc("/ticks", s.handleGetTicks).Methods("GET")
 	r.HandleFunc("/ticks", s.handleSetTicks).Methods("POST")
@@ -88,9 +90,18 @@ func (s *Server) handleRestart(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleGetWorld(w http.ResponseWriter, r *http.Request) {
-	wld, _ := s.producer.World()
-	dat, err := json.Marshal(wld)
+func (s *Server) handleGetSize(w http.ResponseWriter, r *http.Request) {
+	width, height, _ := s.producer.Size()
+	dat, err := json.Marshal(math64.Vec2{X: float64(width), Y: float64(height)})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	w.Write(dat)
+}
+
+func (s *Server) handleGetCreatures(w http.ResponseWriter, r *http.Request) {
+	creatures, _ := s.producer.Creatures()
+	dat, err := json.Marshal(creatures)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/goxjs/glfw"
+	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/evo"
-	"github.com/relnod/evo/pkg/world"
 )
 
 const usage = `Keybindings:
@@ -48,14 +48,14 @@ func (c *Client) Usage() string {
 
 // Init intitializes the window and renderer.
 func (c *Client) Init() {
-	w, err := c.producer.World()
+	width, height, err := c.producer.Size()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	window := NewWindow(w.Width, w.Height)
-	renderer := NewWorldRenderer(w.Width, w.Height)
+	window := NewWindow(width, height)
+	renderer := NewWorldRenderer(width, height)
 	camera := NewCamera(renderer)
 	window.OnResize(func(width, height int) {
 		renderer.SetSize(width, height)
@@ -110,9 +110,9 @@ func (c *Client) Init() {
 	camera.Update()
 	window.Update()
 
-	c.producer.SubscribeWorldChange(func(w *world.World) {
+	c.producer.SubscribeEntitiesChanged(func(creatures []*entity.Creature) {
 		window.Update()
-		renderer.Update(w)
+		renderer.Update(creatures)
 	})
 
 	c.window = window

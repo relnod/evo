@@ -7,9 +7,23 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/relnod/evo/pkg/system"
+	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/world"
 )
+
+// CollisionHandler handles collision detection.
+type CollisionHandler interface {
+	DetectCollisions(creatures []*entity.Creature)
+}
+
+// EntityHandler handles the entitiy pouplation.
+type EntityHandler interface {
+	// InitPopulation initializes the population with a given count.
+	InitPopulation(count int) []*entity.Creature
+
+	// UpdatePopulation updates the entitiy population.
+	UpdatePopulation(creatures []*entity.Creature) []*entity.Creature
+}
 
 // Simulation holds all simulation data.
 type Simulation struct {
@@ -18,14 +32,15 @@ type Simulation struct {
 	ticksPerSecond int
 	running        bool
 	pause          bool
+	creatures      []*entity.Creature
 
-	stats           *Stats
-	world           *world.World
-	collisionSystem *system.Collision
-	entitySystem    *system.Entity
+	stats *Stats
 
-	// Stores the subscriptions to a world change.
-	worldSubscriptions map[uuid.UUID]WorldFn
+	collisionHandler CollisionHandler
+	entityHandler    EntityHandler
+
+	// Stores the subscriptions to a entities changed event.
+	entitiesChangedSubscriptions map[uuid.UUID]EntitiesChangedFn
 
 	m *sync.Mutex
 }
@@ -36,8 +51,11 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 		width:          width,
 		height:         height,
 		ticksPerSecond: ticksPerSecond,
+		creatures:      nil,
 
-		worldSubscriptions: make(map[uuid.UUID]WorldFn),
+		collisionHandler:             world.NewSimpleCollisionHandler(width, height),
+		entityHandler:                entity.NewHandler(width, height),
+		entitiesChangedSubscriptions: make(map[uuid.UUID]EntitiesChangedFn),
 
 		m: &sync.Mutex{},
 	}
@@ -57,12 +75,7 @@ func (s *Simulation) init() {
 
 	rand.Seed(s.stats.Seed)
 
-	s.world = world.NewWorld(s.width, s.height)
-
-	s.collisionSystem = system.NewCollision(s.world)
-	s.entitySystem = system.NewEntity(s.world)
-
-	s.entitySystem.Init()
+	s.creatures = s.entityHandler.InitPopulation(1000)
 }
 
 // Start starts the simulation.
@@ -72,10 +85,8 @@ func (s *Simulation) Start() error {
 		s.m.Lock()
 		start := time.Now()
 		if !s.pause {
-
-			s.world.Update()
-			s.collisionSystem.Update()
-			s.entitySystem.Update()
+			s.collisionHandler.DetectCollisions(s.creatures)
+			s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
 		}
 		s.handleSubscriptions()
 		s.m.Unlock()
@@ -124,9 +135,14 @@ func (s *Simulation) Restart() error {
 	return nil
 }
 
-// World retruns the state of the current world.
-func (s *Simulation) World() (*world.World, error) {
-	return s.world, nil
+// Size returns the size of the simulation
+func (s *Simulation) Size() (int, int, error) {
+	return s.width, s.height, nil
+}
+
+// Creatures returns all creatures.
+func (s *Simulation) Creatures() ([]*entity.Creature, error) {
+	return s.creatures, nil
 }
 
 // Stats returns the current statistics.
@@ -149,26 +165,27 @@ func (s *Simulation) SetTicks(ticks int) error {
 	return nil
 }
 
-// SubscribeWorldChange implements the world change subscription.
-func (s *Simulation) SubscribeWorldChange(stream WorldFn) uuid.UUID {
+// SubscribeEntitiesChanged implements the entities changed subscription.
+func (s *Simulation) SubscribeEntitiesChanged(fn EntitiesChangedFn) uuid.UUID {
 	u := uuid.New()
-	s.worldSubscriptions[u] = stream
+	s.entitiesChangedSubscriptions[u] = fn
 
 	return u
 }
 
-// UnsubscribeWorldChange implements the unsubscription of a world change.
-func (s *Simulation) UnsubscribeWorldChange(id uuid.UUID) {
-	delete(s.worldSubscriptions, id)
+// UnsubscribeEntitiesChanged implments the unsubscription for the entities
+// changed event.
+func (s *Simulation) UnsubscribeEntitiesChanged(id uuid.UUID) {
+	delete(s.entitiesChangedSubscriptions, id)
 }
 
 func (s *Simulation) handleSubscriptions() {
-	for _, stream := range s.worldSubscriptions {
-		stream(s.world)
+	for _, fn := range s.entitiesChangedSubscriptions {
+		fn(s.creatures)
 	}
 }
 
 func (s *Simulation) updateStats() {
 	s.stats.Running = time.Since(s.stats.start) / (time.Millisecond * 1000)
-	s.stats.Population = len(s.world.Creatures)
+	s.stats.Population = len(s.creatures)
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/relnod/evo/api"
-	"github.com/relnod/evo/pkg/world"
+	"github.com/relnod/evo/pkg/entity"
 )
 
 var upgrader = websocket.Upgrader{
@@ -50,18 +50,18 @@ func (s *Server) handleSocketConnection(w http.ResponseWriter, r *http.Request) 
 				log.Fatal(err)
 			}
 			switch subscription.Type {
-			case api.SubscriptionWorld:
-				id := s.producer.SubscribeWorldChange(func(w *world.World) {
-					msg, err := json.Marshal(w)
+			case api.SubscriptionCreaturesChanged:
+				id := s.producer.SubscribeEntitiesChanged(func(creatures []*entity.Creature) {
+					msg, err := json.Marshal(&creatures)
 					if err != nil {
 						// TODO: maybe improve error handling
-						log.Printf("Failed to unmarshal world object (%s)", err)
+						log.Printf("Failed to unmarshal creatures (%s)", err)
 						return
 					}
-					event := &api.Event{Type: api.EventWorld, Message: msg}
+					event := &api.Event{Type: api.EventCreatures, Message: msg}
 					conn.WriteJSON(event)
 				})
-				defer s.producer.UnsubscribeWorldChange(id)
+				defer s.producer.UnsubscribeEntitiesChanged(id)
 			}
 		}
 	}
