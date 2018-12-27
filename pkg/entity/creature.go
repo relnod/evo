@@ -29,7 +29,7 @@ type Creature struct {
 	Radius float64     `json:"radius"`
 	Speed  float64     `json:"speed"`
 
-	Eye   *Eye         `json:"eye"`
+	Eyes  []*Eye       `json:"eyes"`
 	Brain *deep.Neural `json:"-"`
 
 	Alive     bool    `json:"-"`
@@ -49,7 +49,7 @@ type Constants struct {
 }
 
 func NewCreature(pos math64.Vec2, radius float64) *Creature {
-	return newCreature(pos, radius, newBrain(), 0, nil)
+	return newCreature(pos, radius, NewBrain(2), 0, nil)
 }
 
 func (e *Creature) NewChild() *Creature {
@@ -62,32 +62,41 @@ func (e *Creature) NewChild() *Creature {
 		r = 10.0
 	}
 
-	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1, e.Eye)
+	return newCreature(e.Pos, r, e.Brain, e.Consts.Generation+1, e.Eyes)
 }
 
-func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation int, eye *Eye) *Creature {
+func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation int, eyes []*Eye) *Creature {
 	var speed float64
+	var newEyes []*Eye
 	energyConsumption := rand.Float64() / 120
 	energy := radius
 	if radius > 4.0 {
 		speed = mutate(15.0/(radius*radius), 0.2, 1.0)
 
-		eyeRange := mutate(80.0, 1.0, 1.0)
-		if eye != nil {
-			eyeRange = mutate(eye.Range, 0.1, 0.2)
-			eyeRange = mutate(eye.Range, 0.5, 0.1)
+		// If no eye exists create a new one.
+		if len(eyes) == 0 {
+			newEyes = append(newEyes, NewRandomEye())
+		} else {
+			// Mutate all existing eyes.
+			for _, eye := range eyes {
+				eyeRange := mutate(eye.Range, 0.5, 0.1)
+				newEyes = append(newEyes, NewEye(eyeRange, eye.Detects))
+			}
+
+			// With a 10% chance a new eye appears.
+			if rand.Float64() > 0.9 {
+				newEyes = append(newEyes, NewRandomEye())
+			}
 		}
-		eye = NewEye(eyeRange)
 		energyConsumption *= -1.0
 		if brain == nil {
-			brain = newBrain()
+			brain = NewBrain(len(newEyes) * 2)
+		} else {
+			brain = NewMutatedBrain(brain, len(newEyes)*2)
 		}
+
 	} else {
 		brain = nil
-	}
-
-	if brain != nil {
-		brain = newMutateBrain(brain)
 	}
 
 	return &Creature{
@@ -96,7 +105,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		Dir:    randomDir(),
 		Speed:  speed,
 
-		Eye:   eye,
+		Eyes:  newEyes,
 		Brain: brain,
 
 		Alive:     true,
@@ -114,28 +123,35 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 	}
 }
 
-func newBrain() *deep.Neural {
+func NewBrain(inputs int) *deep.Neural {
 	return deep.NewNeural(&deep.Config{
-		Inputs:     2,
-		Layout:     []int{2, 4, 4},
+		Inputs:     inputs,
+		Layout:     []int{inputs, 4, 4},
 		Activation: deep.ActivationLinear,
 		Bias:       true,
 		Weight:     deep.NewNormal(1.0, 0.0),
 	})
 }
 
-func newMutateBrain(brain *deep.Neural) *deep.Neural {
+func NewMutatedBrain(brain *deep.Neural, inputs int) *deep.Neural {
+	newBrain := deep.NewNeural(&deep.Config{
+		Inputs:     inputs,
+		Layout:     []int{inputs, 4, 4},
+		Activation: deep.ActivationLinear,
+		Bias:       true,
+		Weight:     deep.NewNormal(1.0, 0.0),
+	}).Dump()
 	dump := brain.Dump()
 	for i := range dump.Weights {
 		for j := range dump.Weights[i] {
 			for k := range dump.Weights[i][j] {
-				dump.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.1, 0.05)
-				dump.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.5, 0.01)
+				newBrain.Weights[i][j][k] = mutate64(newBrain.Weights[i][j][k], 0.1, 0.05)
+				newBrain.Weights[i][j][k] = mutate64(newBrain.Weights[i][j][k], 0.5, 0.01)
 			}
 		}
 	}
 
-	return deep.FromDump(dump)
+	return deep.FromDump(newBrain)
 }
 
 func mutate(val float64, fac float64, chance float64) float64 {
@@ -202,22 +218,24 @@ func (e *Creature) Update() {
 }
 
 func (e *Creature) updateFromBrain() {
-	in1 := -0.9
-	in2 := -0.9
-	if e.Eye.Count > 0 {
-		in1 += float64(e.Eye.Count) / 10.0
-		if in1 > 0.9 {
-			in1 = 0.9
-		}
+	inputs := make([]float64, len(e.Eyes)*2)
+	for i, eye := range e.Eyes {
+		inputs[i*2] = -0.9
+		inputs[i*2+1] = -0.9
 
-		if e.Eye.Biggest > e.Radius {
-			in2 = 0.9
-		}
+		if eye.Count > 0 {
+			inputs[i*2] += float64(eye.Count) / 10.0
+			if inputs[i*2] > 0.9 {
+				inputs[i*2] = 0.9
+			}
 
-		e.Eye.Reset()
+			if eye.Detected > e.Radius {
+				inputs[i*2+1] = 0.9
+			}
+		}
 	}
 
-	out := e.Brain.Predict([]float64{in1, in2})
+	out := e.Brain.Predict(inputs)
 	if out[0] < 0 {
 		rotation := 0.0
 		if out[1] < -0.5 {
@@ -243,7 +261,10 @@ func (e *Creature) updateFromBrain() {
 		e.Dir.Y *= -1
 	}
 
-	e.Eye.Dir = e.Dir
+	for _, eye := range e.Eyes {
+		eye.Reset()
+		eye.Dir = e.Dir
+	}
 }
 
 // Collide gets called, when the creature collides with another creature.

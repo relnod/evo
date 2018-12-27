@@ -22,7 +22,7 @@ func NewSimpleCollisionHandler(width, height int) *SimpleCollisionHandler {
 	}
 }
 
-// UpdateCollision checks the collision for all creatures.
+// DetectCollisions checks the collision for all creatures.
 func (s *SimpleCollisionHandler) DetectCollisions(creatures []*entity.Creature) {
 	s.updateCreatureCreature(creatures)
 	s.updateCreatureEyeCreature(creatures)
@@ -44,20 +44,22 @@ func (s *SimpleCollisionHandler) updateCreatureCreature(creatures []*entity.Crea
 
 func (s *SimpleCollisionHandler) updateCreatureEyeCreature(creatures []*entity.Creature) {
 	for _, c1 := range creatures {
-		if c1.Eye == nil {
+		if len(c1.Eyes) == 0 {
 			continue
 		}
-		for _, c2 := range creatures {
-			d := math64.Vec2{X: c2.Pos.X - c1.Pos.X, Y: c2.Pos.Y - c1.Pos.Y}
-			if d.Len() > 50 {
-				continue
-			}
+		for _, eye := range c1.Eyes {
+			for _, c2 := range creatures {
+				d := math64.Vec2{X: c2.Pos.X - c1.Pos.X, Y: c2.Pos.Y - c1.Pos.Y}
+				if d.Len() > eye.Range {
+					continue
+				}
 
-			if math64.Angle(&d, &c1.Dir) > c1.Eye.FOV {
-				continue
-			}
+				if math64.Angle(&d, &c1.Dir) > eye.FOV {
+					continue
+				}
 
-			c1.Eye.Sees(c2)
+				eye.Sees(c2)
+			}
 		}
 	}
 }

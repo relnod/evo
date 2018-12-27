@@ -77,9 +77,15 @@ func (w *WorldRenderer) Update(creatures []*entity.Creature) {
 		}
 		w.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
 
-		if c.Eye != nil {
-			w.SetColor(0.0, 0.0, 0.0, 0.0)
-			w.DrawPartialCircle(c.Pos.X, c.Pos.Y, c.Eye.Range, c.Eye.FOV, math.Atan2(c.Eye.Dir.Y, c.Eye.Dir.X))
+		if len(c.Eyes) > 0 {
+			for _, eye := range c.Eyes {
+				if eye.Detects == entity.Biggest {
+					w.SetColor(1.0, 0.0, 0.0, 0.0)
+				} else {
+					w.SetColor(0.0, 1.0, 0.0, 0.0)
+				}
+				w.DrawPartialCircle(c.Pos.X, c.Pos.Y, eye.Range, eye.FOV, math.Atan2(eye.Dir.Y, eye.Dir.X))
+			}
 		}
 	}
 

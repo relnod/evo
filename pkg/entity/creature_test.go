@@ -79,3 +79,10 @@ func TestCreatureCollide(t *testing.T) {
 		assert.Equal(tt, true, c2.Alive)
 	})
 }
+
+func TestNewMutaedBrain(t *testing.T) {
+	t.Run("doesn't crash, when adding a new input layer", func(tt *testing.T) {
+		brain := entity.NewBrain(2)
+		entity.NewMutatedBrain(brain, 4)
+	})
+}
