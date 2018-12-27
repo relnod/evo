@@ -151,7 +151,7 @@ func (w WorldRenderer) UpdateViewport(zoom, x, y float64) {
 		0, 0, 0, 1,
 	)
 
-	gl.UniformMatrix4fv(w.mWorld, mTranslation.Mult(mScale).Transpose().Data)
+	gl.UniformMatrix4fv(w.mWorld, mTranslation.Mult(mScale).Transpose().Data())
 }
 
 func (w *WorldRenderer) initCircleType() {
@@ -201,7 +201,7 @@ func (w *WorldRenderer) DrawCircle(x, y, radius float64) {
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
-	gl.UniformMatrix4fv(w.mModel, mTranslation.Mult(mScale).Transpose().Data)
+	gl.UniformMatrix4fv(w.mModel, mTranslation.Mult(mScale).Transpose().Data())
 
 	gl.DrawArrays(gl.TRIANGLE_FAN, 0, w.circle.numItems)
 }
@@ -242,7 +242,7 @@ func (w *WorldRenderer) DrawPartialCircle(x, y, radius, fov, angle float64) {
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	)
-	gl.UniformMatrix4fv(w.mModel, mTranslation.Mult(mScale).Mult(mRotation).Transpose().Data)
+	gl.UniformMatrix4fv(w.mModel, mTranslation.Mult(mScale).Mult(mRotation).Transpose().Data())
 
 	gl.DrawArrays(gl.LINE_STRIP, 0, int(float64(w.circle.numItems)*fov/(2.0*math.Pi)))
 }
