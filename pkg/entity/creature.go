@@ -72,7 +72,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 	if radius > 4.0 {
 		speed = mutate(15.0/(radius*radius), 0.2, 1.0)
 
-		eyeRange := mutate(80.0, 0.2, 1.0)
+		eyeRange := mutate(80.0, 1.0, 1.0)
 		if eye != nil {
 			eyeRange = mutate(eye.Range, 0.1, 0.2)
 			eyeRange = mutate(eye.Range, 0.5, 0.1)
@@ -164,12 +164,13 @@ func randomDir() math64.Vec2 {
 	return d
 }
 
+// Update updates the state of the creature.
 func (e *Creature) Update() {
 	if e.Energy <= 0 || e.Age > e.Consts.LifeExpectancy {
 		e.Die()
 	}
 
-	if !e.Alive {
+	if !e.IsAlive() {
 		return
 	}
 
@@ -247,7 +248,14 @@ func (e *Creature) updateFromBrain() {
 
 // Collide gets called, when the creature collides with another creature.
 func (e *Creature) Collide(e2 *Creature) {
-	if e.Radius > e2.Radius && !e.IsSameSpecies(e2) {
+	if e.Brain == nil {
+		return
+	}
+
+	if e2.Brain == nil {
+		e.Energy += e2.Radius / 2.0 * 3.0
+		e2.Die()
+	} else if e.Radius > e2.Radius && !e.IsSameSpecies(e2) {
 		e.Energy += e2.Radius / 2.0 * 3.0
 		e2.Die()
 	}
