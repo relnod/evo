@@ -8,6 +8,20 @@ import (
 	"github.com/relnod/evo/pkg/world"
 )
 
+const usage = `Keybindings:
+Ctrl-w        Stop client
+Ctrl-q        Stop client
+
+Ctrl-Add      Increase ticks per seconds.
+Ctrl-Subtract Decrease ticks per seconds
+
+ArrwoLeft     Move camera left
+ArrwoRight    Move camera right
+ArrwoUp       Move camera up
+ArrwoDown     Move camera down
+Add           Zoom in
+Subtract      Zoom out`
+
 type Renderer interface {
 	UpdateViewport(zoom, x, y float64)
 }
@@ -22,6 +36,11 @@ type Client struct {
 // NewClient returns a new render client.
 func NewClient(producer evo.Producer) *Client {
 	return &Client{producer: producer}
+}
+
+// Usage returns the usage for the graphics client.
+func (c *Client) Usage() string {
+	return usage
 }
 
 // Init intitializes the window and renderer.
