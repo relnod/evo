@@ -82,7 +82,7 @@ func (e *Creature) NewChild() *Creature {
 func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation int, eyes []*Eye) *Creature {
 	var speed float64
 	var newEyes []*Eye
-	energyConsumption := rand.Float64() / 500 * radius
+	energyConsumption := rand.Float64() / 300
 	energy := radius
 
 	// if radius > 4.0 {
@@ -90,7 +90,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		if brain == nil {
 			generation = 0
 		}
-		speed = mutate(2/radius, 0.2, 1.0)
+		speed = mutate(2/(radius*radius), 0.2, 1.0)
 
 		// If no eye exists create a new one.
 		if len(eyes) == 0 {
@@ -141,7 +141,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		Consts: Constants{
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
-			EnergyBreed:       mutate(radius*radius, 0.2, 0.9),
+			EnergyBreed:       mutate(radius*radius, 0.05, 0.5),
 			LifeExpectancy:    mutate(radius*radius*radius*radius, 0.2, 1.0),
 		},
 	}

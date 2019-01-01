@@ -13,6 +13,7 @@ type updateFunc func(tick int) error
 // It is safe to controll the ticker asynchron.
 // It is also possible to set a function callback, that will always be called,
 // while running. Even when the ticker is paused.
+// TODO: improve interface of ticker.
 type ticker struct {
 	ticksPerSecond   int
 	updateFunc       updateFunc

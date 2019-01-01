@@ -9,8 +9,9 @@ import (
 
 // Handler implements the evo.EntityHandler.
 type Handler struct {
-	width  int
-	height int
+	initialPopulation int
+	width             int
+	height            int
 
 	animalStats *Stats
 	plantStats  *Stats
@@ -19,10 +20,11 @@ type Handler struct {
 }
 
 // NewHandler returns a new entity handler.
-func NewHandler(width, height int) *Handler {
+func NewHandler(width, height int, initalPopulation int) *Handler {
 	return &Handler{
-		width:  width,
-		height: height,
+		initialPopulation: initalPopulation,
+		width:             width,
+		height:            height,
 
 		animalStats: &Stats{
 			Lifetime:     NewStatistics(),
@@ -41,9 +43,9 @@ func NewHandler(width, height int) *Handler {
 }
 
 // InitPopulation initializes a population with a given count.
-func (h *Handler) InitPopulation(count int) []*Creature {
+func (h *Handler) InitPopulation() []*Creature {
 	var (
-		creatures = make([]*Creature, count)
+		creatures = make([]*Creature, h.initialPopulation)
 	)
 
 	for i := range creatures {

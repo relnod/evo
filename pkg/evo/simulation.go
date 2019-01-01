@@ -20,7 +20,7 @@ type CollisionHandler interface {
 // EntityHandler handles the entitiy poplation.
 type EntityHandler interface {
 	// InitPopulation initializes the population with a given count.
-	InitPopulation(count int) []*entity.Creature
+	InitPopulation() []*entity.Creature
 
 	// UpdatePopulation updates the entitiy population.
 	UpdatePopulation(creatures []*entity.Creature) []*entity.Creature
@@ -58,15 +58,21 @@ type Simulation struct {
 	creatures []*entity.Creature
 
 	ticker              *ticker
-	collisionHandler    CollisionHandler
 	entityHandler       EntityHandler
+	collisionHandler    CollisionHandler
 	subscriptionHandler SubscriptionHandler
 	statsCollector      StatsCollector
 }
 
 // NewSimulation creates a new simulation.
-func NewSimulation(width, height, ticksPerSecond int) *Simulation {
-	seed := time.Now().Unix()
+func NewSimulation(width, height, population int) *Simulation {
+	return NewSimulationFromSeed(width, height, population, time.Now().Unix())
+}
+
+// NewSimulationFromSeed creates a new simulation with a given seed. Therefore
+// the siumulation should be 100% reproducable.
+func NewSimulationFromSeed(width, height, population int, seed int64) *Simulation {
+
 	s := &Simulation{
 		seed:   seed,
 		width:  width,
@@ -74,12 +80,12 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 
 		creatures: nil,
 
+		entityHandler:       entity.NewHandler(width, height, population),
 		collisionHandler:    world.NewSimpleCollisionHandler(width, height),
-		entityHandler:       entity.NewHandler(width, height),
 		statsCollector:      stats.NewIntervalCollector(seed, 5),
 		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
-	s.ticker = newTicker(ticksPerSecond, func(tick int) error {
+	s.ticker = newTicker(60, func(tick int) error {
 		s.collisionHandler.DetectCollisions(s.creatures)
 		s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
 		return nil
@@ -99,7 +105,7 @@ func (s *Simulation) init() {
 
 	rand.Seed(s.seed)
 
-	s.creatures = s.entityHandler.InitPopulation(1000)
+	s.creatures = s.entityHandler.InitPopulation()
 }
 
 // Start starts the simulation.
