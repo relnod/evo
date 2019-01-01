@@ -112,5 +112,8 @@ func (t *ticker) TicksPerSecond() int {
 
 // SetTicksPerSecond sets the ticks per second.
 func (t *ticker) SetTicksPerSecond(ticksPerSecond int) {
+	if ticksPerSecond <= 0 {
+		ticksPerSecond = 1
+	}
 	t.ticksPerSecond = ticksPerSecond
 }

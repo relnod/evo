@@ -163,9 +163,6 @@ func (s *Simulation) Ticks() (int, error) {
 
 // SetTicks sets the ticks per second.
 func (s *Simulation) SetTicks(ticks int) error {
-	if ticks <= 0 {
-		ticks = 1
-	}
 	s.ticker.SetTicksPerSecond(ticks)
 	return nil
 }
