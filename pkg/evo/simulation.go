@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/relnod/evo/pkg/entity"
+	"github.com/relnod/evo/pkg/stats"
 	"github.com/relnod/evo/pkg/world"
 )
 
@@ -15,7 +16,7 @@ type CollisionHandler interface {
 	DetectCollisions(creatures []*entity.Creature)
 }
 
-// EntityHandler handles the entitiy pouplation.
+// EntityHandler handles the entitiy poplation.
 type EntityHandler interface {
 	// InitPopulation initializes the population with a given count.
 	InitPopulation(count int) []*entity.Creature
@@ -27,31 +28,40 @@ type EntityHandler interface {
 	PlantStats() *entity.Stats
 }
 
+// StatsCollector collects stats.
+type StatsCollector interface {
+	Update(tick int, creatures []*entity.Creature)
+	Stats() *stats.Stats
+}
+
 // Simulation holds all simulation data.
 type Simulation struct {
-	width                   int
-	height                  int
-	statsCollectionInterval int
+	seed   int64
+	width  int
+	height int
 
 	creatures                    []*entity.Creature
-	stats                        *Stats
 	entitiesChangedSubscriptions map[uuid.UUID]EntitiesChangedFn
 
 	ticker           *ticker
 	collisionHandler CollisionHandler
 	entityHandler    EntityHandler
+	statsCollector   StatsCollector
 }
 
 // NewSimulation creates a new simulation.
 func NewSimulation(width, height, ticksPerSecond int) *Simulation {
+	seed := time.Now().Unix()
 	s := &Simulation{
-		width:     width,
-		height:    height,
+		seed:   seed,
+		width:  width,
+		height: height,
+
 		creatures: nil,
 
-		statsCollectionInterval:      5,
 		collisionHandler:             world.NewSimpleCollisionHandler(width, height),
 		entityHandler:                entity.NewHandler(width, height),
+		statsCollector:               stats.NewIntervalCollector(seed, 5),
 		entitiesChangedSubscriptions: make(map[uuid.UUID]EntitiesChangedFn),
 	}
 	s.ticker = newTicker(ticksPerSecond, func(tick int) error {
@@ -61,9 +71,7 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 	})
 	s.ticker.SetAlwaysUpdate(func(tick int) error {
 		s.handleSubscriptions()
-		if tick%s.statsCollectionInterval == 0 {
-			s.collectTimeStats()
-		}
+		s.statsCollector.Update(tick, s.creatures)
 		return nil
 	})
 	s.init()
@@ -74,8 +82,7 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 func (s *Simulation) init() {
 	s.ticker.Resume()
 
-	s.stats = NewStats()
-	rand.Seed(s.stats.Seed)
+	rand.Seed(s.seed)
 
 	s.creatures = s.entityHandler.InitPopulation(1000)
 }
@@ -130,9 +137,8 @@ func (s *Simulation) Creatures() ([]*entity.Creature, error) {
 }
 
 // Stats returns the current statistics.
-func (s *Simulation) Stats() (*Stats, error) {
-	s.updateStats()
-	return s.stats, nil
+func (s *Simulation) Stats() (*stats.Stats, error) {
+	return s.statsCollector.Stats(), nil
 }
 
 // Ticks returns the ticks per second.
@@ -167,33 +173,4 @@ func (s *Simulation) handleSubscriptions() {
 	for _, fn := range s.entitiesChangedSubscriptions {
 		fn(s.creatures)
 	}
-}
-
-func (s *Simulation) collectTimeStats() {
-	s.stats.OverTime.Add(s.currentTimeStat())
-}
-
-func (s *Simulation) currentTimeStat() *TimeStat {
-	t := &TimeStat{
-		Population: len(s.creatures),
-		Animal:     &EntityTimeStat{},
-		Plant:      &EntityTimeStat{},
-	}
-
-	for _, c := range s.creatures {
-		if c.Brain == nil {
-			t.Plant.Add(c)
-		} else {
-			t.Animal.Add(c)
-		}
-
-	}
-	return t
-}
-
-func (s *Simulation) updateStats() {
-	s.stats.Running = time.Since(s.stats.start) / (time.Millisecond * 1000)
-	s.stats.Current = s.currentTimeStat()
-	// s.stats.Animal = s.entityHandler.AnimalStats()
-	// s.stats.Plant = s.entityHandler.PlantStats()
 }

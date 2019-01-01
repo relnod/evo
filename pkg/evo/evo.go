@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/relnod/evo/pkg/entity"
+	"github.com/relnod/evo/pkg/stats"
 )
 
 // EntitiesChangedFn defnies a callback function for entities.
@@ -30,7 +31,7 @@ type Producer interface {
 	Creatures() ([]*entity.Creature, error)
 
 	// Stats returns some statistics of the world in its current state.
-	Stats() (*Stats, error)
+	Stats() (*stats.Stats, error)
 
 	// Ticks returns the ticks per second.
 	// The producer should update after every tick.

@@ -17,6 +17,7 @@ import (
 	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/evo"
 	"github.com/relnod/evo/pkg/math64"
+	"github.com/relnod/evo/pkg/stats"
 )
 
 // Client implements evo.Producer
@@ -125,7 +126,7 @@ func (c *Client) Creatures() ([]*entity.Creature, error) {
 }
 
 // Stats retrieves the next stats object from the server.
-func (c *Client) Stats() (*evo.Stats, error) {
+func (c *Client) Stats() (*stats.Stats, error) {
 	resp, err := http.Get("http://" + c.addr + "/stats")
 	if err != nil {
 		return nil, err
@@ -136,7 +137,7 @@ func (c *Client) Stats() (*evo.Stats, error) {
 		return nil, err
 	}
 	resp.Body.Close()
-	var stats evo.Stats
+	var stats stats.Stats
 	err = json.Unmarshal(data, &stats)
 	if err != nil {
 		return nil, err
