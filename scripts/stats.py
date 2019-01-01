@@ -8,7 +8,7 @@ with open('test.json') as f:
 species_keys = ['animal', 'plant']
 
 overtime = data['overtime']
-fig, axes = plt.subplots(ncols=2, nrows=len(species_keys))
+fig, axes = plt.subplots(ncols=8, nrows=len(species_keys))
 for sk in overtime.keys():
     if sk not in species_keys:
         continue

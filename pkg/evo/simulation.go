@@ -25,8 +25,8 @@ type EntityHandler interface {
 	// UpdatePopulation updates the entitiy population.
 	UpdatePopulation(creatures []*entity.Creature) []*entity.Creature
 
-	AnimalStats() *entity.Stats
-	PlantStats() *entity.Stats
+	AnimalStats() *entity.DeathStats
+	PlantStats() *entity.DeathStats
 }
 
 // StatsCollector collects stats.
@@ -73,6 +73,10 @@ func NewSimulation(width, height, population int) *Simulation {
 // the siumulation should be 100% reproducable.
 func NewSimulationFromSeed(width, height, population int, seed int64) *Simulation {
 
+	entityHandler := entity.NewHandler(width, height, population)
+	collisionHandler := world.NewSimpleCollisionHandler(width, height)
+	statsCollector := stats.NewIntervalCollector(entityHandler, seed, 5)
+
 	s := &Simulation{
 		seed:   seed,
 		width:  width,
@@ -80,9 +84,9 @@ func NewSimulationFromSeed(width, height, population int, seed int64) *Simulatio
 
 		creatures: nil,
 
-		entityHandler:       entity.NewHandler(width, height, population),
-		collisionHandler:    world.NewSimpleCollisionHandler(width, height),
-		statsCollector:      stats.NewIntervalCollector(seed, 5),
+		entityHandler:       entityHandler,
+		collisionHandler:    collisionHandler,
+		statsCollector:      statsCollector,
 		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
 	s.ticker = newTicker(60, func(tick int) error {

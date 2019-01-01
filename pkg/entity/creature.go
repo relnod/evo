@@ -82,7 +82,9 @@ func (e *Creature) NewChild() *Creature {
 func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation int, eyes []*Eye) *Creature {
 	var speed float64
 	var newEyes []*Eye
-	energyConsumption := rand.Float64() / 300
+	// energyConsumption := mutate(rand.Float64()*radius, 0.1, 0.1)
+
+	energyConsumption := (rand.NormFloat64()*0.1 + 1.0) / 300.0 * ((1.0*radius + 0.0*(radius*radius)) / 4)
 	energy := radius
 
 	// if radius > 4.0 {
@@ -90,7 +92,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		if brain == nil {
 			generation = 0
 		}
-		speed = mutate(2/(radius*radius), 0.2, 1.0)
+		speed = mutate(2/(radius), 0.2, 1.0)
 
 		// If no eye exists create a new one.
 		if len(eyes) == 0 {
@@ -141,7 +143,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		Consts: Constants{
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
-			EnergyBreed:       mutate(radius*radius, 0.05, 0.5),
+			EnergyBreed:       mutate(math64.Poly(radius, 0, 0.5, 0.5), 0.05, 0.5),
 			LifeExpectancy:    mutate(radius*radius*radius*radius, 0.2, 1.0),
 		},
 	}
@@ -228,7 +230,7 @@ func (e *Creature) Update() {
 			e.State = StateAdult
 		}
 	case StateAdult:
-		if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
+		if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > rand.NormFloat64()*0.2+(e.Consts.LifeExpectancy/3) {
 			e.State = StateBreading
 		}
 

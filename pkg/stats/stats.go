@@ -72,6 +72,7 @@ func (t *timeStatHistory) Add(stat *timeStat) {
 type entityTimeStat struct {
 	Population        int `json:"population"`
 	HighestGeneration int `json:"highest_generation"`
+	entity.DeathStats
 }
 
 func (e *entityTimeStat) Add(c *entity.Creature) {
@@ -84,6 +85,7 @@ func (e *entityTimeStat) Add(c *entity.Creature) {
 type entityTimeStatHistory struct {
 	Population        []int `json:"population"`
 	HighestGeneration []int `json:"highest_generation"`
+	entity.DeathStatsHistory
 }
 
 func newEntityTimeStatHistroy() *entityTimeStatHistory {
@@ -96,4 +98,5 @@ func newEntityTimeStatHistroy() *entityTimeStatHistory {
 func (e *entityTimeStatHistory) Add(stat *entityTimeStat) {
 	e.Population = append(e.Population, stat.Population)
 	e.HighestGeneration = append(e.HighestGeneration, stat.HighestGeneration)
+	e.DeathStatsHistory.Add(&stat.DeathStats)
 }

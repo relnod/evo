@@ -7,14 +7,55 @@ import (
 	"github.com/relnod/evo/pkg/math64/collision"
 )
 
+type grid map[int]map[int]*cell
+
+func (g grid) clear() {
+	for x := range g {
+		for y := range g[x] {
+			g[x][y].plants = make([]*Creature, 0)
+		}
+	}
+}
+
+func newGrid(width, height, gridSize int) grid {
+	gridCols := height / gridSize
+	gridRows := width / gridSize
+
+	grid := make(map[int]map[int]*cell, gridCols)
+
+	for x := 0; x < gridCols; x += gridSize {
+		grid[x] = make(map[int]*cell, gridRows)
+		for y := 0; y < gridRows; y += gridSize {
+			grid[x][y] = &cell{}
+		}
+	}
+
+	return grid
+}
+
+func (g grid) update(creatures []*Creature) {
+	for _, c := range creatures {
+		if c.Brain == nil {
+			cell := g[int(c.Pos.X)][int(c.Pos.Y)]
+			cell.plants = append(cell.plants, c)
+		}
+	}
+}
+
+type cell struct {
+	plants []*Creature
+}
+
 // Handler implements the evo.EntityHandler.
 type Handler struct {
 	initialPopulation int
 	width             int
 	height            int
 
-	animalStats *Stats
-	plantStats  *Stats
+	grid grid
+
+	animalStats *DeathStats
+	plantStats  *DeathStats
 
 	collectStats bool
 }
@@ -26,18 +67,10 @@ func NewHandler(width, height int, initalPopulation int) *Handler {
 		width:             width,
 		height:            height,
 
-		animalStats: &Stats{
-			Lifetime:     NewStatistics(),
-			Interactions: NewStatistics(),
-			Generation:   NewStatistics(),
-			DeathBy:      NewStatistics(),
-		},
-		plantStats: &Stats{
-			Lifetime:     NewStatistics(),
-			Interactions: NewStatistics(),
-			Generation:   NewStatistics(),
-			DeathBy:      NewStatistics(),
-		},
+		grid: newGrid(width, height, 10),
+
+		animalStats:  &DeathStats{},
+		plantStats:   &DeathStats{},
 		collectStats: true,
 	}
 }
@@ -67,15 +100,9 @@ func (h *Handler) UpdatePopulation(creatures []*Creature) []*Creature {
 		if !c.Alive {
 			if h.collectStats {
 				if c.Brain == nil {
-					h.plantStats.Interactions.Add(c.Interactions)
-					h.plantStats.Lifetime.Add(int(c.Age))
-					h.plantStats.Generation.Add(c.Consts.Generation)
-					h.plantStats.DeathBy.Add(int(c.DeathBy))
+					h.plantStats.Add(c)
 				} else {
-					h.animalStats.Interactions.Add(c.Interactions)
-					h.animalStats.Lifetime.Add(int(c.Age))
-					h.animalStats.Generation.Add(c.Consts.Generation)
-					h.animalStats.DeathBy.Add(int(c.DeathBy))
+					h.animalStats.Add(c)
 				}
 			}
 			remove = append(remove, i)
@@ -103,12 +130,17 @@ func (h *Handler) UpdatePopulation(creatures []*Creature) []*Creature {
 	return creatures
 }
 
-func (h *Handler) AnimalStats() *Stats {
+func (h *Handler) AnimalStats() *DeathStats {
 	return h.animalStats
 }
 
-func (h *Handler) PlantStats() *Stats {
+func (h *Handler) PlantStats() *DeathStats {
 	return h.plantStats
+}
+
+func (h *Handler) ClearStats() {
+	h.plantStats.Clear()
+	h.animalStats.Clear()
 }
 
 // RemoveEntity removes an entity at a given index.
