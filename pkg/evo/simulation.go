@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/stats"
 	"github.com/relnod/evo/pkg/world"
@@ -34,19 +35,33 @@ type StatsCollector interface {
 	Stats() *stats.Stats
 }
 
+// SubscriptionHandler defines an evnet subscriber.
+type SubscriptionHandler interface {
+	// SubscribeEntitiesChanged subscribes to changes of entities.
+	// Each time the entities get updated, the provided function gets called.
+	// The returned unique id can be used to unsubscribe later.
+	SubscribeEntitiesChanged(fn api.EntitiesChangedFn) uuid.UUID
+
+	// UnsubscribeWorldChange ends a subscription to the world change.
+	UnsubscribeEntitiesChanged(id uuid.UUID)
+
+	// Update triggers the subscriptions.
+	Update(creatures []*entity.Creature)
+}
+
 // Simulation holds all simulation data.
 type Simulation struct {
 	seed   int64
 	width  int
 	height int
 
-	creatures                    []*entity.Creature
-	entitiesChangedSubscriptions map[uuid.UUID]EntitiesChangedFn
+	creatures []*entity.Creature
 
-	ticker           *ticker
-	collisionHandler CollisionHandler
-	entityHandler    EntityHandler
-	statsCollector   StatsCollector
+	ticker              *ticker
+	collisionHandler    CollisionHandler
+	entityHandler       EntityHandler
+	subscriptionHandler SubscriptionHandler
+	statsCollector      StatsCollector
 }
 
 // NewSimulation creates a new simulation.
@@ -59,10 +74,10 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 
 		creatures: nil,
 
-		collisionHandler:             world.NewSimpleCollisionHandler(width, height),
-		entityHandler:                entity.NewHandler(width, height),
-		statsCollector:               stats.NewIntervalCollector(seed, 5),
-		entitiesChangedSubscriptions: make(map[uuid.UUID]EntitiesChangedFn),
+		collisionHandler:    world.NewSimpleCollisionHandler(width, height),
+		entityHandler:       entity.NewHandler(width, height),
+		statsCollector:      stats.NewIntervalCollector(seed, 5),
+		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
 	s.ticker = newTicker(ticksPerSecond, func(tick int) error {
 		s.collisionHandler.DetectCollisions(s.creatures)
@@ -70,7 +85,7 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 		return nil
 	})
 	s.ticker.SetAlwaysUpdate(func(tick int) error {
-		s.handleSubscriptions()
+		s.subscriptionHandler.Update(s.creatures)
 		s.statsCollector.Update(tick, s.creatures)
 		return nil
 	})
@@ -156,21 +171,12 @@ func (s *Simulation) SetTicks(ticks int) error {
 }
 
 // SubscribeEntitiesChanged implements the entities changed subscription.
-func (s *Simulation) SubscribeEntitiesChanged(fn EntitiesChangedFn) uuid.UUID {
-	u := uuid.New()
-	s.entitiesChangedSubscriptions[u] = fn
-
-	return u
+func (s *Simulation) SubscribeEntitiesChanged(fn api.EntitiesChangedFn) uuid.UUID {
+	return s.subscriptionHandler.SubscribeEntitiesChanged(fn)
 }
 
 // UnsubscribeEntitiesChanged implments the unsubscription for the entities
 // changed event.
 func (s *Simulation) UnsubscribeEntitiesChanged(id uuid.UUID) {
-	delete(s.entitiesChangedSubscriptions, id)
-}
-
-func (s *Simulation) handleSubscriptions() {
-	for _, fn := range s.entitiesChangedSubscriptions {
-		fn(s.creatures)
-	}
+	s.subscriptionHandler.UnsubscribeEntitiesChanged(id)
 }

@@ -15,7 +15,6 @@ import (
 
 	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/pkg/entity"
-	"github.com/relnod/evo/pkg/evo"
 	"github.com/relnod/evo/pkg/math64"
 	"github.com/relnod/evo/pkg/stats"
 )
@@ -28,7 +27,7 @@ type Client struct {
 
 	shouldClose bool
 
-	entitiesChangedSubscriptions map[uuid.UUID]evo.EntitiesChangedFn
+	entitiesChangedSubscriptions map[uuid.UUID]api.EntitiesChangedFn
 }
 
 // New returns a new websocket client with a given address.
@@ -47,7 +46,7 @@ func New(addr string) *Client {
 
 		shouldClose: false,
 
-		entitiesChangedSubscriptions: make(map[uuid.UUID]evo.EntitiesChangedFn),
+		entitiesChangedSubscriptions: make(map[uuid.UUID]api.EntitiesChangedFn),
 	}
 }
 
@@ -184,7 +183,7 @@ func (c *Client) SetTicks(ticks int) error {
 	return err
 }
 
-func (c *Client) SubscribeEntitiesChanged(fn evo.EntitiesChangedFn) uuid.UUID {
+func (c *Client) SubscribeEntitiesChanged(fn api.EntitiesChangedFn) uuid.UUID {
 	u := uuid.New()
 	c.entitiesChangedSubscriptions[u] = fn
 

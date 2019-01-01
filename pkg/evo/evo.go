@@ -3,12 +3,10 @@ package evo
 import (
 	"github.com/google/uuid"
 
+	"github.com/relnod/evo/api"
 	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/stats"
 )
-
-// EntitiesChangedFn defnies a callback function for entities.
-type EntitiesChangedFn func([]*entity.Creature)
 
 // Producer produces data.
 type Producer interface {
@@ -43,7 +41,7 @@ type Producer interface {
 	// SubscribeEntitiesChanged subscribes to changes of entities.
 	// Each time the entities get updated, the provided function gets called.
 	// The returned unique id can be used to unsubscribe later.
-	SubscribeEntitiesChanged(fn EntitiesChangedFn) uuid.UUID
+	SubscribeEntitiesChanged(fn api.EntitiesChangedFn) uuid.UUID
 
 	// UnsubscribeWorldChange ends a subscription to the world change.
 	UnsubscribeEntitiesChanged(id uuid.UUID)
