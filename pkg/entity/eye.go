@@ -45,11 +45,11 @@ func NewRandomEye() *Eye {
 func (e *Eye) Sees(c *Creature) {
 	e.Count++
 	if e.Detects == Biggest {
-		if c.Radius > e.Detected {
+		if c.Speed > 0 && c.Radius > e.Detected {
 			e.Detected = c.Radius
 		}
 	} else if e.Detects == Smallest {
-		if c.Radius < e.Detected {
+		if c.Speed == 0 && c.Radius < e.Detected {
 			e.Detected = c.Radius
 		}
 	}

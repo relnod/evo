@@ -2,6 +2,7 @@ package entity
 
 import (
 	"math/rand"
+	"time"
 
 	deep "github.com/patrikeh/go-deep"
 
@@ -17,6 +18,14 @@ const (
 	StateChild State = iota
 	StateAdult
 	StateBreading
+)
+
+type Death int
+
+const (
+	DeathByAge    Death = 0
+	DeathByHunger       = 1
+	DeathByEaten        = 2
 )
 
 // Creature can either be moving (animal) or stand still (plant).
@@ -38,6 +47,11 @@ type Creature struct {
 	Age       float64 `json:"-"`
 	State     State   `json:"-"`
 
+	Interactions int
+	DeathBy      Death
+
+	lastEaten time.Time
+
 	Consts Constants `json:"-"`
 }
 
@@ -49,7 +63,7 @@ type Constants struct {
 }
 
 func NewCreature(pos math64.Vec2, radius float64) *Creature {
-	return newCreature(pos, radius, NewBrain(2), 0, nil)
+	return newCreature(pos, radius, nil, 0, nil)
 }
 
 func (e *Creature) NewChild() *Creature {
@@ -68,10 +82,15 @@ func (e *Creature) NewChild() *Creature {
 func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation int, eyes []*Eye) *Creature {
 	var speed float64
 	var newEyes []*Eye
-	energyConsumption := rand.Float64() / 120
+	energyConsumption := rand.Float64() / 500 * radius
 	energy := radius
-	if radius > 4.0 {
-		speed = mutate(15.0/(radius*radius), 0.2, 1.0)
+
+	// if radius > 4.0 {
+	if brain != nil || radius > 2.0 && rand.Float64() > 0.99 {
+		if brain == nil {
+			generation = 0
+		}
+		speed = mutate(2/radius, 0.2, 1.0)
 
 		// If no eye exists create a new one.
 		if len(eyes) == 0 {
@@ -96,6 +115,9 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		}
 
 	} else {
+		if brain != nil {
+			generation = 0
+		}
 		brain = nil
 	}
 
@@ -114,10 +136,12 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 		Age:       0,
 		State:     StateChild,
 
+		lastEaten: time.Now(),
+
 		Consts: Constants{
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
-			EnergyBreed:       mutate(radius*radius*radius, 0.2, 0.9),
+			EnergyBreed:       mutate(radius*radius, 0.2, 0.9),
 			LifeExpectancy:    mutate(100, 0.2, 1.0),
 		},
 	}
@@ -182,8 +206,15 @@ func randomDir() math64.Vec2 {
 
 // Update updates the state of the creature.
 func (e *Creature) Update() {
-	if e.Energy <= 0 || e.Age > e.Consts.LifeExpectancy {
-		e.Die()
+	if !e.IsAlive() {
+		return
+	}
+
+	if e.Energy <= 0 {
+		e.Die(DeathByHunger)
+	}
+	if e.Age > e.Consts.LifeExpectancy {
+		e.Die(DeathByAge)
 	}
 
 	if !e.IsAlive() {
@@ -199,7 +230,6 @@ func (e *Creature) Update() {
 			e.State = StateAdult
 		}
 	case StateAdult:
-		// if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
 		if e.Energy > e.Consts.EnergyBreed && (e.Age-e.LastBread) > 40 {
 			e.State = StateBreading
 		}
@@ -269,16 +299,19 @@ func (e *Creature) updateFromBrain() {
 
 // Collide gets called, when the creature collides with another creature.
 func (e *Creature) Collide(e2 *Creature) {
+	if time.Since(e.lastEaten) < time.Second {
+		return
+	}
 	if e.Brain == nil {
 		return
 	}
 
-	if e2.Brain == nil {
-		e.Energy += e2.Radius / 2.0 * 3.0
-		e2.Die()
-	} else if e.Radius > e2.Radius && !e.IsSameSpecies(e2) {
-		e.Energy += e2.Radius / 2.0 * 3.0
-		e2.Die()
+	if e2.Brain == nil || (e.Radius > e2.Radius && !e.IsSameSpecies(e2)) {
+		e.Interactions++
+		e2.Interactions++
+		e.Energy += e2.Radius * e2.Radius * e2.Radius * e2.Radius
+		e2.Die(DeathByEaten)
+		e.lastEaten = time.Now()
 	}
 }
 
@@ -295,6 +328,7 @@ func (e *Creature) IsAlive() bool {
 }
 
 // Die lets the creature die.
-func (e *Creature) Die() {
+func (e *Creature) Die(death Death) {
 	e.Alive = false
+	e.DeathBy = death
 }

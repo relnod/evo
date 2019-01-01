@@ -15,7 +15,9 @@ type Stats struct {
 	Seed    int64         `json:"seed"`
 	Running time.Duration `json:"running"`
 
-	Population int `json:"population"`
+	Population int           `json:"population"`
+	Animal     *entity.Stats `json:"animal"`
+	Plant      *entity.Stats `json:"plant"`
 }
 
 // EntitiesChangedFn defnies a callback function for entities.

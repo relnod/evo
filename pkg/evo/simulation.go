@@ -23,6 +23,9 @@ type EntityHandler interface {
 
 	// UpdatePopulation updates the entitiy population.
 	UpdatePopulation(creatures []*entity.Creature) []*entity.Creature
+
+	AnimalStats() *entity.Stats
+	PlantStats() *entity.Stats
 }
 
 // Simulation holds all simulation data.
@@ -188,4 +191,6 @@ func (s *Simulation) handleSubscriptions() {
 func (s *Simulation) updateStats() {
 	s.stats.Running = time.Since(s.stats.start) / (time.Millisecond * 1000)
 	s.stats.Population = len(s.creatures)
+	s.stats.Animal = s.entityHandler.AnimalStats()
+	s.stats.Plant = s.entityHandler.PlantStats()
 }
