@@ -37,6 +37,11 @@ type Simulation struct {
 	pause          bool
 	creatures      []*entity.Creature
 
+	tick               int
+	lastStatCollection int
+	// in ticks
+	statsCollectionInterval int
+
 	stats *Stats
 
 	collisionHandler CollisionHandler
@@ -56,6 +61,9 @@ func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 		ticksPerSecond: ticksPerSecond,
 		creatures:      nil,
 
+		tick:                         0,
+		lastStatCollection:           0,
+		statsCollectionInterval:      5,
 		collisionHandler:             world.NewSimpleCollisionHandler(width, height),
 		entityHandler:                entity.NewHandler(width, height),
 		entitiesChangedSubscriptions: make(map[uuid.UUID]EntitiesChangedFn),
@@ -71,11 +79,7 @@ func (s *Simulation) init() {
 	s.running = true
 	s.pause = false
 
-	s.stats = &Stats{
-		start: time.Now(),
-		Seed:  time.Now().Unix(),
-	}
-
+	s.stats = NewStats()
 	rand.Seed(s.stats.Seed)
 
 	s.creatures = s.entityHandler.InitPopulation(1000)
@@ -92,8 +96,13 @@ func (s *Simulation) Start() error {
 			s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
 		}
 		s.handleSubscriptions()
+		if s.tick-s.lastStatCollection >= s.statsCollectionInterval {
+			s.collectTimeStats()
+			s.lastStatCollection = s.tick
+		}
 		s.m.Unlock()
 
+		s.tick++
 		time.Sleep(time.Second/time.Duration(s.ticksPerSecond) - time.Since(start))
 	}
 	return nil
@@ -188,9 +197,31 @@ func (s *Simulation) handleSubscriptions() {
 	}
 }
 
+func (s *Simulation) collectTimeStats() {
+	s.stats.OverTime.Add(s.currentTimeStat())
+}
+
+func (s *Simulation) currentTimeStat() *TimeStat {
+	t := &TimeStat{
+		Population: len(s.creatures),
+		Animal:     &EntityTimeStat{},
+		Plant:      &EntityTimeStat{},
+	}
+
+	for _, c := range s.creatures {
+		if c.Brain == nil {
+			t.Plant.Add(c)
+		} else {
+			t.Animal.Add(c)
+		}
+
+	}
+	return t
+}
+
 func (s *Simulation) updateStats() {
 	s.stats.Running = time.Since(s.stats.start) / (time.Millisecond * 1000)
-	s.stats.Population = len(s.creatures)
-	s.stats.Animal = s.entityHandler.AnimalStats()
-	s.stats.Plant = s.entityHandler.PlantStats()
+	s.stats.Current = s.currentTimeStat()
+	// s.stats.Animal = s.entityHandler.AnimalStats()
+	// s.stats.Plant = s.entityHandler.PlantStats()
 }

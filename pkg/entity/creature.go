@@ -23,9 +23,9 @@ const (
 type Death int
 
 const (
-	DeathByAge    Death = 0
-	DeathByHunger       = 1
-	DeathByEaten        = 2
+	DeathByAge    Death = 1
+	DeathByHunger       = 3
+	DeathByEaten        = 5
 )
 
 // Creature can either be moving (animal) or stand still (plant).
@@ -142,7 +142,7 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 			Generation:        generation,
 			EnergyConsumption: energyConsumption,
 			EnergyBreed:       mutate(radius*radius, 0.2, 0.9),
-			LifeExpectancy:    mutate(100, 0.2, 1.0),
+			LifeExpectancy:    mutate(radius*radius*radius*radius, 0.2, 1.0),
 		},
 	}
 }
@@ -212,12 +212,10 @@ func (e *Creature) Update() {
 
 	if e.Energy <= 0 {
 		e.Die(DeathByHunger)
+		return
 	}
 	if e.Age > e.Consts.LifeExpectancy {
 		e.Die(DeathByAge)
-	}
-
-	if !e.IsAlive() {
 		return
 	}
 

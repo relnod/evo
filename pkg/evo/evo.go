@@ -1,24 +1,10 @@
 package evo
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 
 	"github.com/relnod/evo/pkg/entity"
 )
-
-// Stats describes runtime statistics of the simulation.
-type Stats struct {
-	start time.Time
-
-	Seed    int64         `json:"seed"`
-	Running time.Duration `json:"running"`
-
-	Population int           `json:"population"`
-	Animal     *entity.Stats `json:"animal"`
-	Plant      *entity.Stats `json:"plant"`
-}
 
 // EntitiesChangedFn defnies a callback function for entities.
 type EntitiesChangedFn func([]*entity.Creature)

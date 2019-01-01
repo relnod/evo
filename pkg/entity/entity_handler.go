@@ -84,7 +84,7 @@ func (h *Handler) UpdatePopulation(creatures []*Creature) []*Creature {
 			c.State = StateAdult
 			c.LastBread = c.Age
 			c.Energy -= c.Radius
-			for i := 0; i < rand.Intn(2)+1; i++ {
+			for i := 0; i < rand.Intn(int(1/(c.Radius*c.Radius*c.Radius*c.Radius)*100)+1)+1; i++ {
 				child := c.NewChild()
 				if c.Energy-child.Energy > 0 {
 					c.Energy -= child.Energy
