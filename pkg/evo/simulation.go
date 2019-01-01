@@ -2,7 +2,6 @@ package evo
 
 import (
 	"math/rand"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,54 +29,50 @@ type EntityHandler interface {
 
 // Simulation holds all simulation data.
 type Simulation struct {
-	width          int
-	height         int
-	ticksPerSecond int
-	running        bool
-	pause          bool
-	creatures      []*entity.Creature
-
-	tick               int
-	lastStatCollection int
-	// in ticks
+	width                   int
+	height                  int
 	statsCollectionInterval int
 
-	stats *Stats
-
-	collisionHandler CollisionHandler
-	entityHandler    EntityHandler
-
-	// Stores the subscriptions to a entities changed event.
+	creatures                    []*entity.Creature
+	stats                        *Stats
 	entitiesChangedSubscriptions map[uuid.UUID]EntitiesChangedFn
 
-	m *sync.Mutex
+	ticker           *ticker
+	collisionHandler CollisionHandler
+	entityHandler    EntityHandler
 }
 
 // NewSimulation creates a new simulation.
 func NewSimulation(width, height, ticksPerSecond int) *Simulation {
 	s := &Simulation{
-		width:          width,
-		height:         height,
-		ticksPerSecond: ticksPerSecond,
-		creatures:      nil,
+		width:     width,
+		height:    height,
+		creatures: nil,
 
-		tick:                         0,
-		lastStatCollection:           0,
 		statsCollectionInterval:      5,
 		collisionHandler:             world.NewSimpleCollisionHandler(width, height),
 		entityHandler:                entity.NewHandler(width, height),
 		entitiesChangedSubscriptions: make(map[uuid.UUID]EntitiesChangedFn),
-
-		m: &sync.Mutex{},
 	}
+	s.ticker = newTicker(ticksPerSecond, func(tick int) error {
+		s.collisionHandler.DetectCollisions(s.creatures)
+		s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
+		return nil
+	})
+	s.ticker.SetAlwaysUpdate(func(tick int) error {
+		s.handleSubscriptions()
+		if tick%s.statsCollectionInterval == 0 {
+			s.collectTimeStats()
+		}
+		return nil
+	})
 	s.init()
 
 	return s
 }
 
 func (s *Simulation) init() {
-	s.running = true
-	s.pause = false
+	s.ticker.Resume()
 
 	s.stats = NewStats()
 	rand.Seed(s.stats.Seed)
@@ -87,63 +82,40 @@ func (s *Simulation) init() {
 
 // Start starts the simulation.
 func (s *Simulation) Start() error {
-	s.running = true
-	for s.running {
-		s.m.Lock()
-		start := time.Now()
-		if !s.pause {
-			s.collisionHandler.DetectCollisions(s.creatures)
-			s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
-		}
-		s.handleSubscriptions()
-		if s.tick-s.lastStatCollection >= s.statsCollectionInterval {
-			s.collectTimeStats()
-			s.lastStatCollection = s.tick
-		}
-		s.m.Unlock()
-
-		s.tick++
-		time.Sleep(time.Second/time.Duration(s.ticksPerSecond) - time.Since(start))
-	}
-	return nil
+	return s.ticker.Start()
 }
 
 // Stop stops the simulation.
 func (s *Simulation) Stop() error {
-	s.running = false
+	s.ticker.Stop()
 	// TODO: cleanup
+	// TODO: maybe wait until ticker is stoped
 	return nil
 }
 
 // Pause pauses the simulation.
 func (s *Simulation) Pause() error {
-	s.pause = true
+	s.ticker.Pause()
 	return nil
 }
 
 // Resume resumes the simulation.
 func (s *Simulation) Resume() error {
-	s.pause = false
+	s.ticker.Resume()
 	return nil
 }
 
 // PauseResume toggles pause/resume.
 func (s *Simulation) PauseResume() error {
-	s.m.Lock()
-	if s.pause {
-		s.Resume()
-	} else {
-		s.Pause()
-	}
-	s.m.Unlock()
+	s.ticker.TogglePauseResume()
 	return nil
 }
 
 // Restart restarts the simulation
 func (s *Simulation) Restart() error {
-	s.m.Lock()
+	s.ticker.Lock()
 	s.init()
-	s.m.Unlock()
+	s.ticker.Unlock()
 	return nil
 }
 
@@ -165,7 +137,7 @@ func (s *Simulation) Stats() (*Stats, error) {
 
 // Ticks returns the ticks per second.
 func (s *Simulation) Ticks() (int, error) {
-	return s.ticksPerSecond, nil
+	return s.ticker.TicksPerSecond(), nil
 }
 
 // SetTicks sets the ticks per second.
@@ -173,7 +145,7 @@ func (s *Simulation) SetTicks(ticks int) error {
 	if ticks <= 0 {
 		ticks = 1
 	}
-	s.ticksPerSecond = ticks
+	s.ticker.SetTicksPerSecond(ticks)
 	return nil
 }
 
