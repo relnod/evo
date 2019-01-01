@@ -213,6 +213,7 @@ func (w *WorldRenderer) DrawCircle(x, y, radius float64) {
 }
 
 func (w *WorldRenderer) DrawPartialCircle(x, y, radius, fov, angle float64) {
+	angle -= fov / 2
 	gl.BindBuffer(gl.ARRAY_BUFFER, w.circle.VB)
 
 	gl.EnableVertexAttribArray(w.aVertexPosition)
