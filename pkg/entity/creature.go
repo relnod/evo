@@ -68,7 +68,7 @@ func NewCreature(pos math64.Vec2, radius float64) *Creature {
 
 func (e *Creature) NewChild() *Creature {
 	r := mutate(e.Radius, 0.1, 0.5)
-	r = mutate(e.Radius, 0.9, 0.3)
+	r = mutate(e.Radius, 1.5, 0.3)
 
 	if r < 2.0 {
 		r = 2.0
@@ -319,7 +319,7 @@ func (e *Creature) Collide(e2 *Creature) {
 // creatures is less than 10%.
 func (e *Creature) IsSameSpecies(e2 *Creature) bool {
 	diff := e.Radius / e2.Radius
-	return diff > 0.9 && diff < 1.1
+	return diff > 0.5 && diff < 1.5
 }
 
 // IsAlive returns true if the creature is alive.
