@@ -160,6 +160,12 @@ func NewBrain(inputs int) *deep.Neural {
 }
 
 func NewMutatedBrain(brain *deep.Neural, inputs int) *deep.Neural {
+	min := func(a, b int) int {
+		if a < b {
+			return a
+		}
+		return b
+	}
 	newBrain := deep.NewNeural(&deep.Config{
 		Inputs:     inputs,
 		Layout:     []int{inputs, 4, 4},
@@ -168,11 +174,11 @@ func NewMutatedBrain(brain *deep.Neural, inputs int) *deep.Neural {
 		Weight:     deep.NewNormal(1.0, 0.0),
 	}).Dump()
 	dump := brain.Dump()
-	for i := range dump.Weights {
-		for j := range dump.Weights[i] {
-			for k := range dump.Weights[i][j] {
-				newBrain.Weights[i][j][k] = mutate64(newBrain.Weights[i][j][k], 0.1, 0.05)
-				newBrain.Weights[i][j][k] = mutate64(newBrain.Weights[i][j][k], 0.5, 0.01)
+	for i := 0; i < min(len(dump.Weights), len(newBrain.Weights)); i++ {
+		for j := 0; j < min(len(dump.Weights[i]), len(newBrain.Weights[i])); j++ {
+			for k := 0; k < min(len(dump.Weights[i][j]), len(newBrain.Weights[i][j])); k++ {
+				newBrain.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.1, 0.05)
+				newBrain.Weights[i][j][k] = mutate64(dump.Weights[i][j][k], 0.5, 0.01)
 			}
 		}
 	}
