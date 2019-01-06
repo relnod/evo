@@ -39,12 +39,6 @@ type RenderType struct {
 }
 
 type WorldRenderer struct {
-	width  int
-	height int
-
-	viewportWidth  int
-	viewportHeight int
-
 	gl      *webgl.Context
 	program gl.Program
 
@@ -56,14 +50,8 @@ type WorldRenderer struct {
 	circle RenderType
 }
 
-func NewWorldRenderer(width, height int) *WorldRenderer {
-	return &WorldRenderer{
-		width:  width,
-		height: height,
-
-		viewportWidth:  width,
-		viewportHeight: height,
-	}
+func NewWorldRenderer() *WorldRenderer {
+	return &WorldRenderer{}
 }
 
 func (w *WorldRenderer) Update(creatures []*entity.Creature) {
@@ -96,8 +84,23 @@ func (w *WorldRenderer) Update(creatures []*entity.Creature) {
 
 func (w *WorldRenderer) SetSize(width, height int) {
 	gl.Viewport(0, 0, width, height)
-	w.width = width
-	w.height = height
+}
+
+func (w WorldRenderer) SetViewport(x, y, width, height float32) {
+	mScale := math32.NewMat4(
+		width*2.0, 0, 0, -x*2.0,
+		0, -height*2.0, 0, y*2.0,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	)
+	mTranslation := math32.NewMat4(
+		1, 0, 0, -1,
+		0, 1, 0, 1,
+		0, 0, 1, 0,
+		0, 0, 0, 1,
+	)
+
+	gl.UniformMatrix4fv(w.mWorld, mTranslation.Mult(mScale).Transpose().Data())
 }
 
 func (w *WorldRenderer) Init() {
@@ -135,29 +138,6 @@ func (w *WorldRenderer) Init() {
 	// gl.Setprogram.Set("uColor", r.uColor)
 
 	w.initCircleType()
-}
-
-func (w WorldRenderer) UpdateViewport(zoom, x, y float64) {
-	dw := float64(w.width) / float64(w.viewportWidth)
-	dh := float64(w.height) / float64(w.viewportHeight)
-	d := dw
-	if dw > dh {
-		d = dh
-	}
-	mScale := math32.NewMat4(
-		float32(d*2.0/float64(w.width)*zoom), 0, 0, float32(-x),
-		0, float32(-d*2.0/float64(w.height)*zoom), 0, float32(y),
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	)
-	mTranslation := math32.NewMat4(
-		1, 0, 0, -1,
-		0, 1, 0, 1,
-		0, 0, 1, 0,
-		0, 0, 0, 1,
-	)
-
-	gl.UniformMatrix4fv(w.mWorld, mTranslation.Mult(mScale).Transpose().Data())
 }
 
 func (w *WorldRenderer) initCircleType() {

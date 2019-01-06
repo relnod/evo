@@ -25,10 +25,6 @@ ArrwoDown     Move camera down
 Add           Zoom in
 Subtract      Zoom out`
 
-type Renderer interface {
-	UpdateViewport(zoom, x, y float64)
-}
-
 // Client implements evo.Consumer
 type Client struct {
 	producer evo.Producer
@@ -55,14 +51,17 @@ func (c *Client) Init() {
 	}
 
 	window := NewWindow(width, height)
-	renderer := NewWorldRenderer(width, height)
-	camera := NewCamera(renderer)
+	renderer := NewWorldRenderer()
+	camera := NewCamera(width, height)
 
 	window.Init()
 	renderer.Init()
 
+	camera.Connect(renderer)
+
 	window.OnResize(func(width, height int) {
 		renderer.SetSize(width, height)
+		camera.SetSize(width, height)
 		camera.Update()
 	})
 	window.OnKey(func(key glfw.Key, mods glfw.ModifierKey) {
