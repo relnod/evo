@@ -61,6 +61,7 @@ func (s *Server) Start() error {
 		r.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 		r.Handle("/debug/pprof/block", pprof.Handler("block"))
 	}
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	err := http.ListenAndServe(s.addr, r)
 	if err != nil {
