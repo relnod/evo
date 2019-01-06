@@ -47,7 +47,7 @@ func (w *Window) Init() {
 	}
 
 	glfw.SwapInterval(0)
-	window.SetKeyCallback(func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	window.SetKeyCallback(func(wi *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		if action != glfw.Press && action != glfw.Repeat {
 			return
 		}
@@ -55,6 +55,9 @@ func (w *Window) Init() {
 		if w.keyCallback != nil {
 			w.keyCallback(key, mods)
 		}
+	})
+	window.SetSizeCallback(func(wi *glfw.Window, width int, height int) {
+		w.resizeCallback(width, height)
 	})
 
 	w.window = window

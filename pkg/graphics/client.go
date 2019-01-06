@@ -57,8 +57,13 @@ func (c *Client) Init() {
 	window := NewWindow(width, height)
 	renderer := NewWorldRenderer(width, height)
 	camera := NewCamera(renderer)
+
+	window.Init()
+	renderer.Init()
+
 	window.OnResize(func(width, height int) {
 		renderer.SetSize(width, height)
+		camera.Update()
 	})
 	window.OnKey(func(key glfw.Key, mods glfw.ModifierKey) {
 		switch key {
@@ -105,8 +110,6 @@ func (c *Client) Init() {
 		}
 	})
 
-	window.Init()
-	renderer.Init()
 	camera.Update()
 	window.Update()
 
