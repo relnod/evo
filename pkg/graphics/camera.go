@@ -11,14 +11,19 @@ type Renderer interface {
 
 // Camera defines a 2D camera, that can zoom and move in all four directions.
 type Camera struct {
+	// window size
 	windowWidth  int
 	windowHeight int
 
+	// world size
 	worldWidth  int
 	worldHeight int
 
+	// zoom stores the zoom level.
+	// Lowest value is 1.
 	zoom int
 
+	// x,y, width and height represent the viewport in world coordinates.
 	x      int
 	y      int
 	width  int
@@ -100,6 +105,26 @@ func (c *Camera) updateZoom() {
 	c.height = c.worldHeight / c.zoom
 }
 
+// Viewport returns the viewport of the camera.
+// All retruned values are between 0 and 1.
+func (c *Camera) Viewport() (x float32, y float32, width float32, height float32) {
+	if c.x > 0 {
+		x = float32(c.x) / float32(c.windowWidth)
+	}
+	if c.y > 0 {
+		y = float32(c.y) / float32(c.worldHeight)
+	}
+
+	ratio := math32.Min(
+		float32(c.windowWidth)/float32(c.worldWidth),
+		float32(c.windowHeight)/float32(c.worldHeight),
+	)
+	width, height = c.relativeToWindowSize(ratio, ratio)
+	width /= float32(c.width) / float32(c.worldWidth)
+	height /= float32(c.height) / float32(c.worldHeight)
+	return x, y, width, height
+}
+
 // Update updates the viewport of the renderer.
 func (c *Camera) Update() {
 	if c.renderer == nil {
@@ -109,23 +134,7 @@ func (c *Camera) Update() {
 	c.updateZoom()
 	c.santizeBounds()
 
-	var x float32
-	if c.x > 0 {
-		x = float32(c.x) / float32(c.windowWidth)
-	}
-	var y float32
-	if c.y > 0 {
-		y = float32(c.y) / float32(c.worldHeight)
-	}
-
-	ratio := math32.Min(
-		float32(c.windowWidth)/float32(c.worldWidth),
-		float32(c.windowHeight)/float32(c.worldHeight),
-	)
-	width, height := c.relativeToWindowSize(ratio, ratio)
-	width /= float32(c.width) / float32(c.worldWidth)
-	height /= float32(c.height) / float32(c.worldHeight)
-	c.renderer.SetViewport(x, y, width, height)
+	c.renderer.SetViewport(c.Viewport())
 }
 
 // ZoomIn zooms the viewport in.
@@ -140,28 +149,26 @@ func (c *Camera) ZoomOut() {
 	c.Update()
 }
 
-const movementSteps = 100
-
 // MoveDown moves the viewport down.
 func (c *Camera) MoveDown() {
-	c.y += movementSteps
+	c.y += c.worldHeight / 10
 	c.Update()
 }
 
 // MoveUp moves the viewport up.
 func (c *Camera) MoveUp() {
-	c.y -= movementSteps
+	c.y -= c.worldHeight / 10
 	c.Update()
 }
 
 // MoveRight moves the viewport to the right.
 func (c *Camera) MoveRight() {
-	c.x += movementSteps
+	c.x += c.worldWidth / 10
 	c.Update()
 }
 
 // MoveLeft moves the viewport to the left.
 func (c *Camera) MoveLeft() {
-	c.x -= movementSteps
+	c.x -= c.worldWidth / 10
 	c.Update()
 }
