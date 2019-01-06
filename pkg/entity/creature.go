@@ -105,8 +105,11 @@ func newCreature(pos math64.Vec2, radius float64, brain *deep.Neural, generation
 			}
 
 			// With a 10% chance a new eye appears.
-			if rand.Float64() > 0.9 {
+			r := rand.Float64()
+			if r > 0.9 {
 				newEyes = append(newEyes, NewRandomEye())
+			} else if r < 0.1 && len(newEyes) > 1 {
+				newEyes = newEyes[:len(newEyes)-1]
 			}
 		}
 		energyConsumption *= -1.0
