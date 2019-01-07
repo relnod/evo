@@ -63,7 +63,7 @@ func (w *WorldRenderer) Update(creatures []*entity.Creature) {
 		} else {
 			w.SetColor(1/(c.Radius-4.0), 0.0, 0.0, 1.0)
 		}
-		w.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius)
+		w.DrawCircle(c.Pos.X, c.Pos.Y, c.Radius, true)
 
 		if len(c.Eyes) > 0 {
 			for _, eye := range c.Eyes {
@@ -75,6 +75,16 @@ func (w *WorldRenderer) Update(creatures []*entity.Creature) {
 				w.DrawPartialCircle(c.Pos.X, c.Pos.Y, eye.Range, eye.FOV, math.Atan2(eye.Dir.Y, eye.Dir.X))
 			}
 		}
+	}
+
+	oldest := entity.FindOldest(creatures)
+	if oldest != nil {
+		w.SetColor(0.0, 0.0, 1.0, 0.0)
+		w.DrawCircle(oldest.Pos.X, oldest.Pos.Y, 50, false)
+		w.DrawCircle(oldest.Pos.X, oldest.Pos.Y, 51, false)
+		w.DrawCircle(oldest.Pos.X, oldest.Pos.Y, 52, false)
+		w.DrawCircle(oldest.Pos.X, oldest.Pos.Y, 53, false)
+		w.DrawCircle(oldest.Pos.X, oldest.Pos.Y, 54, false)
 	}
 
 	if gl.GetError() != gl.NO_ERROR {
@@ -141,7 +151,7 @@ func (w *WorldRenderer) Init() {
 }
 
 func (w *WorldRenderer) initCircleType() {
-	numVertices := 40
+	numVertices := 256
 	vertices := make([]float32, numVertices*2)
 
 	for i := 0; i < len(vertices); i += 2 {
@@ -169,7 +179,7 @@ func (w *WorldRenderer) SetColor(r, g, b, a float64) {
 	gl.Uniform4f(w.uColor, float32(r), float32(g), float32(b), float32(a))
 }
 
-func (w *WorldRenderer) DrawCircle(x, y, radius float64) {
+func (w *WorldRenderer) DrawCircle(x, y, radius float64, fill bool) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, w.circle.VB)
 
 	gl.EnableVertexAttribArray(w.aVertexPosition)
@@ -189,7 +199,11 @@ func (w *WorldRenderer) DrawCircle(x, y, radius float64) {
 	)
 	gl.UniformMatrix4fv(w.mModel, mTranslation.Mult(mScale).Transpose().Data())
 
-	gl.DrawArrays(gl.TRIANGLE_FAN, 0, w.circle.numItems)
+	var mode gl.Enum = gl.TRIANGLE_FAN
+	if !fill {
+		mode = gl.LINE_STRIP
+	}
+	gl.DrawArrays(mode, 0, w.circle.numItems)
 }
 
 func (w *WorldRenderer) DrawPartialCircle(x, y, radius, fov, angle float64) {

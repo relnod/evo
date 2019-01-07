@@ -9,6 +9,6 @@ import (
 )
 
 func TestMin(t *testing.T) {
-	assert.Equal(t, math32.Min(0.0, 1.0), 0.0)
-	assert.Equal(t, math32.Min(1.0, 0.0), 0.0)
+	assert.Equal(t, math32.Min(0.0, 1.0), float32(0.0))
+	assert.Equal(t, math32.Min(1.0, 0.0), float32(0.0))
 }

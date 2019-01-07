@@ -39,7 +39,7 @@ type Creature struct {
 	Speed  float64     `json:"speed"`
 
 	Eyes  []*Eye       `json:"eyes"`
-	Brain *deep.Neural `json:"-"`
+	Brain *deep.Neural `json:"brain"`
 
 	Alive     bool    `json:"-"`
 	Energy    float64 `json:"-"`
@@ -52,7 +52,7 @@ type Creature struct {
 
 	lastEaten time.Time
 
-	Consts Constants `json:"-"`
+	Consts Constants `json:"constants"`
 }
 
 type Constants struct {
