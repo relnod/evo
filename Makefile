@@ -1,7 +1,6 @@
 WD=$(shell pwd)
-# mkdir -p ${WD}/out/static
 
-build:
+build: clean
 	cd cmd/evod/ && go build -o ${WD}/out/evod
 	cd cmd/evoproxy/ && go build -o ${WD}/out/evoproxy
 	cd cmd/evoclient/ && go build -o ${WD}/out/evoclient
@@ -17,3 +16,6 @@ watch:
 plot:
 	curl http://localhost:8080/stats > test.json
 	python3 scripts/stats.py
+
+clean:
+	rm -rf out
