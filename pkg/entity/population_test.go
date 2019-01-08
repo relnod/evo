@@ -8,7 +8,7 @@ import (
 	"github.com/relnod/evo/pkg/entity"
 )
 
-func TestEntityHandlerUpdatePopulation(t *testing.T) {
+func TestPopulationUpdater(t *testing.T) {
 	living := func() *entity.Creature {
 		return &entity.Creature{
 			Alive:  true,
@@ -27,8 +27,8 @@ func TestEntityHandlerUpdatePopulation(t *testing.T) {
 			c,
 			living(),
 		}
-		entityHandler := &entity.Handler{}
-		populationAfterUpdate := entityHandler.UpdatePopulation(population)
+		populationUpdater := &entity.PopulationUpdater{}
+		populationAfterUpdate := populationUpdater.UpdatePopulation(population)
 
 		assert.Equal(tt, 2, len(populationAfterUpdate))
 		assert.NotContains(tt, populationAfterUpdate, c)

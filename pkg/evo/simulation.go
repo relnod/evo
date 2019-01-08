@@ -12,11 +12,8 @@ import (
 	"github.com/relnod/evo/pkg/world"
 )
 
-// EntityHandler handles the entitiy poplation.
-type EntityHandler interface {
-	// InitPopulation initializes the population with a given count.
-	InitPopulation() []*entity.Creature
-
+// EntityUpdater handles the entitiy poplation.
+type EntityUpdater interface {
 	// UpdatePopulation updates the entitiy population.
 	UpdatePopulation(creatures []*entity.Creature) []*entity.Creature
 
@@ -46,14 +43,15 @@ type SubscriptionHandler interface {
 
 // Simulation holds all simulation data.
 type Simulation struct {
-	seed   int64
-	width  int
-	height int
+	seed              int64
+	width             int
+	height            int
+	initialPopulation int
 
 	creatures []*entity.Creature
 
 	ticker              *ticker
-	entityHandler       EntityHandler
+	entityUpdater       EntityUpdater
 	collisionDetector   world.CollisionDetector
 	subscriptionHandler SubscriptionHandler
 	statsCollector      StatsCollector
@@ -67,19 +65,19 @@ func NewSimulation(width, height, population int) *Simulation {
 // NewSimulationFromSeed creates a new simulation with a given seed. Therefore
 // the siumulation should be 100% reproducable.
 func NewSimulationFromSeed(width, height, population int, seed int64) *Simulation {
-
-	entityHandler := entity.NewHandler(width, height, population)
+	entityUpdater := entity.NewPopulationUpdater()
 	collisionDetector := world.NewSimpleCollisionDetector(width, height)
-	statsCollector := stats.NewIntervalCollector(entityHandler, seed, 5)
+	statsCollector := stats.NewIntervalCollector(entityUpdater, seed, 5)
 
 	s := &Simulation{
-		seed:   seed,
-		width:  width,
-		height: height,
+		seed:              seed,
+		width:             width,
+		height:            height,
+		initialPopulation: population,
 
 		creatures: nil,
 
-		entityHandler:       entityHandler,
+		entityUpdater:       entityUpdater,
 		collisionDetector:   collisionDetector,
 		statsCollector:      statsCollector,
 		subscriptionHandler: api.NewSubscriptionHandler(),
@@ -103,14 +101,14 @@ func (s *Simulation) init() {
 
 	rand.Seed(s.seed)
 
-	s.creatures = s.entityHandler.InitPopulation()
+	s.creatures = entity.InitPopulation(s.initialPopulation, s.width, s.height)
 }
 
 // Update updates the simulation logic
 func (s *Simulation) Update() {
 	collisions := s.collisionDetector.DetectCollisions(s.creatures)
 	world.ResolveAllCollisions(collisions)
-	s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
+	s.creatures = s.entityUpdater.UpdatePopulation(s.creatures)
 }
 
 // Start starts the simulation.
