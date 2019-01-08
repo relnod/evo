@@ -26,6 +26,11 @@ func NewSimpleCollisionDetector(width, height int) *SimpleCollisionDetector {
 func (s *SimpleCollisionDetector) DetectCollisions(creatures []*entity.Creature) []Collision {
 	var collisions []Collision
 	for _, c := range creatures {
+		// We only need to check the collision for entities, that are moving.
+		if c.Speed <= 0 {
+			continue
+		}
+
 		// Check if the creature is outside the world boundaries.
 		if c.Pos.X < 0.0 {
 			collisions = append(collisions, &creatureBorderCollision{c, collision.LEFT, s.width, s.height})
@@ -37,27 +42,18 @@ func (s *SimpleCollisionDetector) DetectCollisions(creatures []*entity.Creature)
 			collisions = append(collisions, &creatureBorderCollision{c, collision.BOT, s.width, s.height})
 		}
 
-		// If the creature is moving, we have to check for a collision with
-		// another creature.
-		if c.Speed > 0 {
-			for _, c2 := range creatures {
-				if c == c2 {
-					continue
-				}
-				if collision.CircleCircle(&c.Pos, c.Radius, &c2.Pos, c2.Radius) {
-					collisions = append(collisions, &creatureCreatureCollision{c, c2})
-				}
+		// Check collision with other entities
+		for _, c2 := range creatures {
+			if c == c2 {
+				continue
 			}
-		}
+			if collision.CircleCircle(&c.Pos, c.Radius, &c2.Pos, c2.Radius) {
+				collisions = append(collisions, &creatureCreatureCollision{c, c2})
+			}
 
-		// If the creature has eyes, check if the eyes see anything.
-		if len(c.Eyes) > 0 {
-			for _, eye := range c.Eyes {
-				for _, c2 := range creatures {
-					if c == c2 {
-						continue
-					}
-
+			// If the creature has eyes, check if any of the eyes sees c2.
+			if len(c.Eyes) > 0 {
+				for _, eye := range c.Eyes {
 					d := math64.Vec2{X: c2.Pos.X - c.Pos.X, Y: c2.Pos.Y - c.Pos.Y}
 					// Check if the other creature is in range of the eye.
 					if d.Len()-c2.Radius > eye.Range {
@@ -73,6 +69,7 @@ func (s *SimpleCollisionDetector) DetectCollisions(creatures []*entity.Creature)
 				}
 			}
 		}
+
 	}
 	return collisions
 }
