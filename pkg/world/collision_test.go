@@ -2,11 +2,11 @@ package world
 
 import (
 	"math"
-	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/relnod/evo/interal/testutil"
 	"github.com/relnod/evo/pkg/entity"
 	"github.com/relnod/evo/pkg/math64"
 	"github.com/relnod/evo/pkg/math64/collision"
@@ -73,11 +73,7 @@ func testCollisionDetector(t *testing.T, collisionDetector CollisionDetector) {
 }
 
 func benchmarkCollisionDetector(b *testing.B, collisionDetector CollisionDetector) {
-	rand.Seed(123734)
-	var population []*entity.Creature
-	for i := 0; i < 1000; i++ {
-		population = append(population, entity.NewCreature(math64.Vec2{X: rand.Float64() * 10, Y: rand.Float64() * 10}, rand.Float64()*2))
-	}
+	population := testutil.Population(1000)
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		collisionDetector.DetectCollisions(population)

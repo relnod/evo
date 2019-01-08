@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/relnod/evo/interal/testutil"
 	"github.com/relnod/evo/pkg/entity"
 )
 
@@ -33,4 +34,13 @@ func TestPopulationUpdater(t *testing.T) {
 		assert.Equal(tt, 2, len(populationAfterUpdate))
 		assert.NotContains(tt, populationAfterUpdate, c)
 	})
+}
+
+func BenchmarkPopulationUpdater(b *testing.B) {
+	population := testutil.Population(1000)
+	populationUpdater := &entity.PopulationUpdater{}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		populationUpdater.UpdatePopulation(population)
+	}
 }
