@@ -12,11 +12,6 @@ import (
 	"github.com/relnod/evo/pkg/world"
 )
 
-// CollisionHandler handles collision detection.
-type CollisionHandler interface {
-	DetectCollisions(creatures []*entity.Creature)
-}
-
 // EntityHandler handles the entitiy poplation.
 type EntityHandler interface {
 	// InitPopulation initializes the population with a given count.
@@ -59,7 +54,7 @@ type Simulation struct {
 
 	ticker              *ticker
 	entityHandler       EntityHandler
-	collisionHandler    CollisionHandler
+	collisionDetector   world.CollisionDetector
 	subscriptionHandler SubscriptionHandler
 	statsCollector      StatsCollector
 }
@@ -74,7 +69,7 @@ func NewSimulation(width, height, population int) *Simulation {
 func NewSimulationFromSeed(width, height, population int, seed int64) *Simulation {
 
 	entityHandler := entity.NewHandler(width, height, population)
-	collisionHandler := world.NewSimpleCollisionHandler(width, height)
+	collisionDetector := world.NewSimpleCollisionDetector(width, height)
 	statsCollector := stats.NewIntervalCollector(entityHandler, seed, 5)
 
 	s := &Simulation{
@@ -85,12 +80,13 @@ func NewSimulationFromSeed(width, height, population int, seed int64) *Simulatio
 		creatures: nil,
 
 		entityHandler:       entityHandler,
-		collisionHandler:    collisionHandler,
+		collisionDetector:   collisionDetector,
 		statsCollector:      statsCollector,
 		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
 	s.ticker = newTicker(60, func(tick int) error {
-		s.collisionHandler.DetectCollisions(s.creatures)
+		collisions := s.collisionDetector.DetectCollisions(s.creatures)
+		world.ResolveAllCollisions(collisions)
 		s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
 		return nil
 	})

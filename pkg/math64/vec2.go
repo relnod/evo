@@ -28,6 +28,11 @@ func (v *Vec2) Rotate(angle float64) {
 	v.Y = x*math.Sin(angle) + y*math.Cos(angle)
 }
 
+// Angle returns the angle between two 2d vectors.
 func Angle(v1, v2 *Vec2) float64 {
-	return math.Cos((v1.X*v2.X + v1.Y*v2.Y) / (v1.Len() * v2.Len()))
+	angle := math.Atan2(v2.Y, v2.X) - math.Atan2(v1.Y, v1.X)
+	if angle < 0 {
+		angle += 2 * math.Pi
+	}
+	return angle
 }
