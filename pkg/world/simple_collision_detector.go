@@ -26,8 +26,9 @@ func NewSimpleCollisionDetector(width, height int) *SimpleCollisionDetector {
 func (s *SimpleCollisionDetector) DetectCollisions(creatures []*entity.Creature) []Collision {
 	var collisions []Collision
 	for _, c := range creatures {
-		// We only need to check the collision for entities, that are moving.
-		if c.Speed <= 0 {
+		// We only need to check collisions for entities, that are moving or for
+		// child creatures, which are still distributing.
+		if c.Speed <= 0 && c.State != entity.StateChild {
 			continue
 		}
 
@@ -40,6 +41,11 @@ func (s *SimpleCollisionDetector) DetectCollisions(creatures []*entity.Creature)
 			collisions = append(collisions, &creatureBorderCollision{c, collision.TOP, s.width, s.height})
 		} else if c.Pos.Y > float64(s.height) {
 			collisions = append(collisions, &creatureBorderCollision{c, collision.BOT, s.width, s.height})
+		}
+
+		// We only need to check collisions with other entities if it is moving.
+		if c.Speed <= 0 {
+			continue
 		}
 
 		// Check collision with other entities

@@ -20,6 +20,7 @@ func testCollisionDetector(t *testing.T, collisionDetector CollisionDetector) {
 	cRight := &entity.Creature{Speed: 1, Radius: 1, Pos: math64.Vec2{X: 11, Y: 5}}
 	cTop := &entity.Creature{Speed: 1, Radius: 1, Pos: math64.Vec2{X: 5, Y: -1}}
 	cBot := &entity.Creature{Speed: 1, Radius: 1, Pos: math64.Vec2{X: 5, Y: 11}}
+	cOutOfBoundsChild := &entity.Creature{State: entity.StateChild, Radius: 1, Pos: math64.Vec2{X: 100, Y: 100}}
 
 	eye := &entity.Eye{Range: 2, FOV: math.Pi}
 	cEye := &entity.Creature{Speed: 1, Dir: math64.Vec2{X: 1, Y: 1}, Pos: math64.Vec2{X: 1, Y: 1}, Eyes: []*entity.Eye{eye}}
@@ -39,12 +40,13 @@ func testCollisionDetector(t *testing.T, collisionDetector CollisionDetector) {
 		},
 		{
 			"detects collision between a creature and the world border",
-			[]*entity.Creature{cLeft, cRight, cTop, cBot},
+			[]*entity.Creature{cLeft, cRight, cTop, cBot, cOutOfBoundsChild},
 			[]Collision{
 				&creatureBorderCollision{cLeft, collision.LEFT, 10, 10},
 				&creatureBorderCollision{cRight, collision.RIGHT, 10, 10},
 				&creatureBorderCollision{cTop, collision.TOP, 10, 10},
 				&creatureBorderCollision{cBot, collision.BOT, 10, 10},
+				&creatureBorderCollision{cOutOfBoundsChild, collision.RIGHT, 10, 10},
 			},
 		},
 		{
