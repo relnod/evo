@@ -10,6 +10,9 @@ build: clean
 test:
 	go test -v ./...
 
+bench:
+	go test -run=NONE -bench=. ./...
+
 watch:
 	modd -f scripts/modd.conf
 

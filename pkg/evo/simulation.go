@@ -85,9 +85,7 @@ func NewSimulationFromSeed(width, height, population int, seed int64) *Simulatio
 		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
 	s.ticker = newTicker(60, func(tick int) error {
-		collisions := s.collisionDetector.DetectCollisions(s.creatures)
-		world.ResolveAllCollisions(collisions)
-		s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
+		s.Update()
 		return nil
 	})
 	s.ticker.SetAlwaysUpdate(func(tick int) error {
@@ -106,6 +104,13 @@ func (s *Simulation) init() {
 	rand.Seed(s.seed)
 
 	s.creatures = s.entityHandler.InitPopulation()
+}
+
+// Update updates the simulation logic
+func (s *Simulation) Update() {
+	collisions := s.collisionDetector.DetectCollisions(s.creatures)
+	world.ResolveAllCollisions(collisions)
+	s.creatures = s.entityHandler.UpdatePopulation(s.creatures)
 }
 
 // Start starts the simulation.

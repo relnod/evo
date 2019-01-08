@@ -2,6 +2,7 @@ package world
 
 import (
 	"math"
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func testCollisionDetector(t *testing.T, collisionDetector CollisionDetector) {
 	cBot := &entity.Creature{Speed: 1, Radius: 1, Pos: math64.Vec2{X: 5, Y: 11}}
 
 	eye := &entity.Eye{Range: 2, FOV: math.Pi}
-	cEye := &entity.Creature{Dir: math64.Vec2{X: 1, Y: 1}, Pos: math64.Vec2{X: 1, Y: 1}, Eyes: []*entity.Eye{eye}}
+	cEye := &entity.Creature{Speed: 1, Dir: math64.Vec2{X: 1, Y: 1}, Pos: math64.Vec2{X: 1, Y: 1}, Eyes: []*entity.Eye{eye}}
 	cSeen := &entity.Creature{Radius: 1, Pos: math64.Vec2{X: 2, Y: 2}}
 	cNotSeen1 := &entity.Creature{Radius: 1, Pos: math64.Vec2{X: 0, Y: 0}}
 	cNotSeen2 := &entity.Creature{Radius: 1, Pos: math64.Vec2{X: 5, Y: 5}}
@@ -71,6 +72,22 @@ func testCollisionDetector(t *testing.T, collisionDetector CollisionDetector) {
 	}
 }
 
+func benchmarkCollisionDetector(b *testing.B, collisionDetector CollisionDetector) {
+	rand.Seed(123734)
+	var population []*entity.Creature
+	for i := 0; i < 1000; i++ {
+		population = append(population, entity.NewCreature(math64.Vec2{X: rand.Float64() * 10, Y: rand.Float64() * 10}, rand.Float64()*2))
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		collisionDetector.DetectCollisions(population)
+	}
+}
+
 func TestSimpleCollisionDetector(t *testing.T) {
 	testCollisionDetector(t, NewSimpleCollisionDetector(10, 10))
+}
+
+func BenchmarkSimpleCollisionDetector(b *testing.B) {
+	benchmarkCollisionDetector(b, NewSimpleCollisionDetector(10, 10))
 }
