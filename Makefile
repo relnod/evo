@@ -1,5 +1,7 @@
 WD=$(shell pwd)
 
+export GO111MODULE=on
+
 build: clean
 	cd cmd/evod/ && go build -o ${WD}/out/evod
 	cd cmd/evoproxy/ && go build -o ${WD}/out/evoproxy
@@ -8,7 +10,8 @@ build: clean
 	cp cmd/evoclient/index.html ${WD}/out/static/index.html
 
 test:
-	go test -v ./...
+	# TODO: find a way to run tests in a package that uses opengl
+	go test -v `go list ./... | grep -v cmd | grep -v graphics`
 
 bench:
 	go test -run=NONE -bench=. ./...
