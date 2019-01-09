@@ -29,7 +29,12 @@ Subtract      Zoom out`
 type Client struct {
 	producer evo.Producer
 
-	window *Window
+	creatures []*entity.Creature
+
+	ticker *evo.Ticker
+
+	window   *Window
+	renderer *WorldRenderer
 }
 
 // NewClient returns a new render client.
@@ -113,19 +118,31 @@ func (c *Client) Init() {
 	window.Update()
 
 	c.producer.SubscribeEntitiesChanged(func(creatures []*entity.Creature) {
-		window.Update()
-		renderer.Update(creatures)
+		c.creatures = creatures
 	})
 
 	c.window = window
+	c.renderer = renderer
 }
 
 // Start starts the client.
 func (c *Client) Start() {
-	c.producer.Start()
+	go c.producer.Start()
+	c.ticker = evo.NewTicker(60, func(tick int) error {
+		c.window.Update()
+		c.renderer.Update(c.creatures)
+		return nil
+	})
+	c.ticker.Start()
+	// for t := range c.ticker.C {
+	// 	_ = t
+	// 	c.window.Update()
+	// 	c.renderer.Update(c.creatures)
+	// }
 }
 
 // Stop stops the graphics client.
 func (c *Client) Stop() {
 	c.producer.Stop()
+	c.ticker.Stop()
 }

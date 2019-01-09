@@ -50,7 +50,7 @@ type Simulation struct {
 
 	creatures []*entity.Creature
 
-	ticker              *ticker
+	ticker              *Ticker
 	entityUpdater       EntityUpdater
 	collisionDetector   world.CollisionDetector
 	subscriptionHandler SubscriptionHandler
@@ -82,11 +82,8 @@ func NewSimulationFromSeed(width, height, population int, seed int64) *Simulatio
 		statsCollector:      statsCollector,
 		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
-	s.ticker = newTicker(60, func(tick int) error {
+	s.ticker = NewTicker(60, func(tick int) error {
 		s.Update()
-		return nil
-	})
-	s.ticker.SetAlwaysUpdate(func(tick int) error {
 		s.subscriptionHandler.Update(s.creatures)
 		s.statsCollector.Update(tick, s.creatures)
 		return nil

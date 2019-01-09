@@ -8,13 +8,13 @@ import (
 // updateFunc defines a function signature used for the  update callback.
 type updateFunc func(tick int) error
 
-// ticker is a time ticker, that calls an update function for a certain ticks
+// Ticker is a time ticker, that calls an update function for a certain ticks
 // per second.
 // It is safe to controll the ticker asynchron.
 // It is also possible to set a function callback, that will always be called,
 // while running. Even when the ticker is paused.
 // TODO: improve interface of ticker.
-type ticker struct {
+type Ticker struct {
 	ticksPerSecond   int
 	updateFunc       updateFunc
 	alwaysUpdateFunc updateFunc
@@ -27,10 +27,12 @@ type ticker struct {
 	m *sync.Mutex
 }
 
-func newTicker(ticksPerSecond int, updateFunc updateFunc) *ticker {
-	return &ticker{
-		ticksPerSecond: ticksPerSecond,
-		updateFunc:     updateFunc,
+// NewTicker returns a new ticker.
+func NewTicker(ticksPerSecond int, updateFunc updateFunc) *Ticker {
+	return &Ticker{
+		ticksPerSecond:   ticksPerSecond,
+		updateFunc:       updateFunc,
+		alwaysUpdateFunc: func(tick int) error { return nil },
 
 		running: false,
 		pausing: false,
@@ -42,7 +44,7 @@ func newTicker(ticksPerSecond int, updateFunc updateFunc) *ticker {
 // Start starts the ticker. This method only exists, if an error occurs during
 // the updateFunc call or if ticker.stop() gets called.
 // TODO: make start time more correct
-func (t *ticker) Start() error {
+func (t *Ticker) Start() error {
 	t.running = true
 	t.pausing = false
 
@@ -67,16 +69,16 @@ func (t *ticker) Start() error {
 }
 
 // Stop stops the ticker on the next tick.
-func (t *ticker) Stop() { t.running = false }
+func (t *Ticker) Stop() { t.running = false }
 
 // Pause pauses the ticker on the next tick.
-func (t *ticker) Pause() { t.pausing = true }
+func (t *Ticker) Pause() { t.pausing = true }
 
 // Resume resumes the ticker on the next tick.
-func (t *ticker) Resume() { t.pausing = true }
+func (t *Ticker) Resume() { t.pausing = false }
 
 // TogglePauseResume toggles pause/resume.
-func (t *ticker) TogglePauseResume() {
+func (t *Ticker) TogglePauseResume() {
 	t.m.Lock()
 	if t.pausing {
 		t.Resume()
@@ -87,32 +89,32 @@ func (t *ticker) TogglePauseResume() {
 }
 
 // Lock locks the ticker.
-func (t *ticker) Lock() {
+func (t *Ticker) Lock() {
 	t.m.Lock()
 }
 
 // Unlock unlocks the ticker.
-func (t *ticker) Unlock() {
+func (t *Ticker) Unlock() {
 	t.m.Unlock()
 }
 
 // SetUpdate sets the update callback.
-func (t *ticker) SetUpdate(updateFunc updateFunc) {
+func (t *Ticker) SetUpdate(updateFunc updateFunc) {
 	t.updateFunc = updateFunc
 }
 
-// SetUpdate sets update callback that always gets called.
-func (t *ticker) SetAlwaysUpdate(updateFunc updateFunc) {
+// SetAlwaysUpdate sets update callback that always gets called.
+func (t *Ticker) SetAlwaysUpdate(updateFunc updateFunc) {
 	t.alwaysUpdateFunc = updateFunc
 }
 
 // TicksPerSecond returns the ticks per second.
-func (t *ticker) TicksPerSecond() int {
+func (t *Ticker) TicksPerSecond() int {
 	return t.ticksPerSecond
 }
 
 // SetTicksPerSecond sets the ticks per second.
-func (t *ticker) SetTicksPerSecond(ticksPerSecond int) {
+func (t *Ticker) SetTicksPerSecond(ticksPerSecond int) {
 	if ticksPerSecond <= 0 {
 		ticksPerSecond = 1
 	}
