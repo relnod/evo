@@ -11,13 +11,10 @@ type updateFunc func(tick int) error
 // Ticker is a time ticker, that calls an update function for a certain ticks
 // per second.
 // It is safe to controll the ticker asynchron.
-// It is also possible to set a function callback, that will always be called,
-// while running. Even when the ticker is paused.
 // TODO: improve interface of ticker.
 type Ticker struct {
-	ticksPerSecond   int
-	updateFunc       updateFunc
-	alwaysUpdateFunc updateFunc
+	ticksPerSecond int
+	updateFunc     updateFunc
 
 	// state of the ticker
 	running bool
@@ -30,9 +27,8 @@ type Ticker struct {
 // NewTicker returns a new ticker.
 func NewTicker(ticksPerSecond int, updateFunc updateFunc) *Ticker {
 	return &Ticker{
-		ticksPerSecond:   ticksPerSecond,
-		updateFunc:       updateFunc,
-		alwaysUpdateFunc: func(tick int) error { return nil },
+		ticksPerSecond: ticksPerSecond,
+		updateFunc:     updateFunc,
 
 		running: false,
 		pausing: false,
@@ -56,9 +52,6 @@ func (t *Ticker) Start() error {
 			if err := t.updateFunc(t.tick); err != nil {
 				return err
 			}
-		}
-		if err := t.alwaysUpdateFunc(t.tick); err != nil {
-			return err
 		}
 		t.m.Unlock()
 
@@ -101,11 +94,6 @@ func (t *Ticker) Unlock() {
 // SetUpdate sets the update callback.
 func (t *Ticker) SetUpdate(updateFunc updateFunc) {
 	t.updateFunc = updateFunc
-}
-
-// SetAlwaysUpdate sets update callback that always gets called.
-func (t *Ticker) SetAlwaysUpdate(updateFunc updateFunc) {
-	t.alwaysUpdateFunc = updateFunc
 }
 
 // TicksPerSecond returns the ticks per second.
