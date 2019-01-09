@@ -1,5 +1,7 @@
 # Evo - Evloution Simulator
 
+[![Build Status](https://travis-ci.org/relnod/evo.svg?branch=master)](https://travis-ci.org/relnod/evo)
+
 ## Goals
 
 1. Stable simulation: the simulation should run (as long as possible) without all creatures dying.
