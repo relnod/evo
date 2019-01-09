@@ -82,12 +82,7 @@ func NewSimulationFromSeed(width, height, population int, seed int64) *Simulatio
 		statsCollector:      statsCollector,
 		subscriptionHandler: api.NewSubscriptionHandler(),
 	}
-	s.ticker = NewTicker(60, func(tick int) error {
-		s.Update()
-		s.subscriptionHandler.Update(s.creatures)
-		s.statsCollector.Update(tick, s.creatures)
-		return nil
-	})
+	s.ticker = NewTicker(time.Second / 60)
 	s.init()
 
 	return s
@@ -110,7 +105,12 @@ func (s *Simulation) Update() {
 
 // Start starts the simulation.
 func (s *Simulation) Start() error {
-	return s.ticker.Start()
+	for tick := range s.ticker.C {
+		s.Update()
+		s.subscriptionHandler.Update(s.creatures)
+		s.statsCollector.Update(tick, s.creatures)
+	}
+	return nil
 }
 
 // Stop stops the simulation.
@@ -164,12 +164,14 @@ func (s *Simulation) Stats() (*stats.Stats, error) {
 
 // Ticks returns the ticks per second.
 func (s *Simulation) Ticks() (int, error) {
-	return s.ticker.TicksPerSecond(), nil
+	// TODO
+	return int(s.ticker.Interval()), nil
 }
 
 // SetTicks sets the ticks per second.
 func (s *Simulation) SetTicks(ticks int) error {
-	s.ticker.SetTicksPerSecond(ticks)
+	// TODO
+	s.ticker.SetInterval(time.Duration(ticks))
 	return nil
 }
 

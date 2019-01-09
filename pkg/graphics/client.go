@@ -2,6 +2,7 @@ package graphics
 
 import (
 	"log"
+	"time"
 
 	"github.com/goxjs/glfw"
 	"github.com/relnod/evo/pkg/entity"
@@ -123,22 +124,17 @@ func (c *Client) Init() {
 
 	c.window = window
 	c.renderer = renderer
+	c.ticker = evo.NewTicker(time.Second / 60)
 }
 
 // Start starts the client.
 func (c *Client) Start() {
 	go c.producer.Start()
-	c.ticker = evo.NewTicker(60, func(tick int) error {
+	for tick := range c.ticker.C {
+		_ = tick
 		c.window.Update()
 		c.renderer.Update(c.creatures)
-		return nil
-	})
-	c.ticker.Start()
-	// for t := range c.ticker.C {
-	// 	_ = t
-	// 	c.window.Update()
-	// 	c.renderer.Update(c.creatures)
-	// }
+	}
 }
 
 // Stop stops the graphics client.
